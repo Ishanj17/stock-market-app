@@ -1,0 +1,12 @@
+# Ignore backend and frontend node_modules
+node_modules/
+
+# Ignore environment files
+.env
+
+# Ignore build folders
+/dist
+/build
+
+# macOS file
+.DS_Store
