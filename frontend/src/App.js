@@ -1,26 +1,36 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Dashboard from './components/dashboard/DashBoard';
+import StockScreen from './components/stocks/StockScreen';
+import StockDetails from './components/stocks/StockDetails';
+import MutualFundScreen from './components/mutual-funds/MutualFundScreen';
+import FundDetails from './components/mutual-funds/FundDetails';
+import IPOScreen from './components/ipos/IPOScreen';
+import IPODetails from './components/ipos/IPODetails';
+import { useEffect } from 'react';
+import axios from 'axios';
+// import IPOScreen from './components/ipos/IPOScreen';
 
 function App() {
-  const [stocks, setStocks] = useState([]);
-
   useEffect(() => {
-    axios.get("http://localhost:5000/api/stock")
+    axios.get("http://localhost:5000/api/stocks/")
       .then(res => console.log(res))
       .catch(err => console.error(err));
-  }, []);
-
+     }, []);
+   
+   
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>📈 Live Stock Prices</h1>
-      <ul>
-        {stocks.map((stock, idx) => (
-          <li key={idx}>
-            {stock.name} - ₹{stock.price} ({stock.change}%)
-          </li>
-        ))}
-      </ul>
-    </div>
+      <div className="App">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/stocks" element={<StockScreen />} />
+          <Route path="/stocks/:stockId" element={<StockDetails />} />
+          <Route path="/mutual-funds" element={<MutualFundScreen />} />
+          <Route path="/mutual-funds/:fundId" element={<FundDetails />} />
+          <Route path="/ipos" element={<IPOScreen />} />
+          <Route path="/ipos/:ipoId" element={<IPODetails />} />
+        </Routes>
+      </div>
   );
 }
 
