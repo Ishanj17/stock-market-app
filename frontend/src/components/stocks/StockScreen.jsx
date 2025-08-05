@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
 import StockCard from './StockCard';
 import LoadingSpinner from '../common/LoadingSpinner';
+import axios from 'axios';
 
 const StockScreen = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const StockScreen = () => {
   const tabs = [
     { id: 'trending', label: 'Trending', icon: '📈' },
     { id: 'price_shockers', label: 'Price Shockers', icon: '⚡' },
-    { id: 'BSE_most_active', label: 'BSE Active', icon: '' },
+    { id: 'BSE_most_active', label: 'BSE Active', icon: '📊' },
     { id: 'NSE_most_active', label: 'NSE Active', icon: '📊' }
   ];
 
@@ -54,7 +55,75 @@ const StockScreen = () => {
     setLoading(true);
     try {
       // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const API_BASE_URL = process.env.REACT_APP_API_URL;
+      // trending stocks
+      if(tabType === 'trending') {
+        const fetchTrendingStocks = async () => {
+          const res = await axios.get(`${API_BASE_URL}/api/stocks/trending`);
+          return res.data;
+        };
+        const {
+          trending_stocks: { top_gainers, top_losers },
+        } = await fetchTrendingStocks();
+        const trendingStocks = [...top_gainers, ...top_losers];
+        console.log(trendingStocks, 'trendingStocks')
+        mockDataByCategory[tabType] = trendingStocks.map(stock => ({
+          company_name: stock.company_name,
+          price: stock.price,
+          percent_change: stock.percentChange,
+          volume: stock.volume,
+          category: ''
+        }))
+      }
+      // price shockers
+      if(tabType === 'price_shockers') {
+        const fetchPriceShockers = async () => {
+          const res = await axios.get(`${API_BASE_URL}/api/stocks/price-shockers`);
+          return res.data;
+        };
+        const {
+          BSE_PriceShocker
+        } = await fetchPriceShockers();
+        mockDataByCategory[tabType] = BSE_PriceShocker.map(stock => ({
+          company_name: stock.displayName,
+          price: stock.price,
+          percent_change: stock.percentChange,
+          volume: stock.volume,
+          category: ''
+        }))
+      }
+      // // BSE most active
+      if(tabType === 'BSE_most_active') {
+        const fetchBSEMostActive = async () => {
+          const res = await axios.get(`${API_BASE_URL}/api/stocks/BSE-most-active`);
+          return res.data;
+        };
+        const BSE_most_active = await fetchBSEMostActive();
+        console.log(BSE_most_active, 'BSE_most_active')
+        mockDataByCategory[tabType] = BSE_most_active.map(stock => ({
+          company_name: stock.company,
+          price: stock.price,
+          percent_change: stock.percent_change,
+          volume: stock.volume,
+          category: ''
+        }))
+      }
+      // // NSE most active
+      if(tabType === 'NSE_most_active') {
+        const fetchNSEMostActive = async () => {
+          const res = await axios.get(`${API_BASE_URL}/api/stocks/NSE-most-active`);
+          return res.data;
+        };
+        const NSE_most_active = await fetchNSEMostActive();
+        mockDataByCategory[tabType] = NSE_most_active.map(stock => ({
+          company_name: stock.company,
+          price: stock.price,
+          percent_change: stock.percent_change,
+          volume: stock.volume,
+          category: ''
+        }))
+      }     
+
       const mockData = mockDataByCategory[tabType] || [];
       setStocksData(mockData);
     } catch (err) {

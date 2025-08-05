@@ -1,8 +1,9 @@
 import React from 'react';
 
 const StockCard = ({ stock, onClick }) => {
-  const isPositive = stock.change.startsWith('+');
-  
+  const isPositive = typeof stock?.percent_change === 'number'
+  ? stock.percent_change >= 0
+  : !stock?.percent_change?.toString().includes('-');  
   return (
     <div 
       onClick={onClick}
@@ -11,7 +12,7 @@ const StockCard = ({ stock, onClick }) => {
       <div className="flex justify-between items-center">
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-gray-900 mb-1">
-            {stock.name}
+            {stock?.company_name}
           </h3>
           <p className="text-sm text-gray-500">
             Volume: {stock.volume}
@@ -25,7 +26,7 @@ const StockCard = ({ stock, onClick }) => {
           <p className={`text-sm font-medium ${
             isPositive ? 'text-green-600' : 'text-red-600'
           }`}>
-            {stock.change}
+            {stock.percent_change}
           </p>
         </div>
       </div>

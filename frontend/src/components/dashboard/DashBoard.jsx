@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
 import DashboardCard from './DashBoardCard';
-import MarketSentiment from './MarketSentiment';
+import NewsCards from './NewsCards';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
+import axios from 'axios';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const Dashboard = () => {
     trendingStocks: [],
     mutualFunds: [],
     ipos: [],
-    marketSentiment: {}
+    news: []
   });
 
   useEffect(() => {
@@ -25,26 +26,52 @@ const Dashboard = () => {
     try {
       setLoading(true);
       // TODO: Replace with actual API calls
+      const API_BASE_URL = process.env.REACT_APP_API_URL;
+      // trending stocks
+      const fetchTrendingStocks = async () => {
+        const res = await axios.get(`${API_BASE_URL}/api/stocks/trending`);
+        return res.data;
+      };
+      const {
+        trending_stocks: { top_gainers, top_losers },
+      } = await fetchTrendingStocks();
+      // mutual funds
+      const fetchMutualFunds = async () => {
+        const res = await axios.get(`${API_BASE_URL}/api/mutualfunds`);
+        return res.data;
+      };
+      const { Equity } = await fetchMutualFunds();
+      // ipos
+      const fetchIpos = async () => {
+        const res = await axios.get(`${API_BASE_URL}/api/ipos`);
+        return res.data;
+      };
+      const { active } = await fetchIpos();
+      
+      // news
+      const fetchNews = async () => {
+        const res = await axios.get(`${API_BASE_URL}/api/news`);
+        return res.data;
+      };
+      const newsData = await fetchNews();
+      
       const mockData = {
         trendingStocks: [
-          { name: 'TCS', price: '3,450', change: 2.5 },
-          { name: 'RELIANCE', price: '2,850', change: 5.2 },
-          { name: 'INFY', price: '1,850', change: -1.2 }
+          { name: top_gainers[0].company_name, price: top_gainers[0].price, change: top_gainers[0].percent_change},
+          { name: top_losers[0].company_name, price: top_losers[0].price, change: top_losers[0].percent_change},
+          { name: top_gainers[1].company_name, price: top_gainers[1].price, change: top_gainers[1].percent_change},
         ],
         mutualFunds: [
-          { name: 'HDFC Fund', return: 18.5 },
-          { name: 'SBI Bluechip', return: 15.2 },
-          { name: 'ICICI Prudential', return: 8.5 }
+          { name: Equity["Flexi Cap"][0].fund_name, return: Equity["Flexi Cap"][0]["5_year_return"] },
+          { name: Equity["Mid-Cap"][0].fund_name, return: Equity["Mid-Cap"][0]["5_year_return"] },
+          { name: Equity["Small-Cap"][0].fund_name, return: Equity["Small-Cap"][0]["5_year_return"] }
         ],
         ipos: [
-          { company: 'Company A', priceBand: '100-120' },
-          { company: 'Company B', priceBand: '250-280' },
-          { company: 'Company C', priceBand: '150-180' }
+          { company: active[0].name, priceBand: active[0].min_price + '-' +active[0].max_price },
+          { company: active[1].name, priceBand: active[1].min_price + '-' +active[1].max_price },
+          { company: active[2].name, priceBand: active[2].min_price + '-' +active[2].max_price }
         ],
-        marketSentiment: {
-          sensex: { value: '65,000', change: 1.2 },
-          nifty: { value: '19,500', change: 0.8 }
-        }
+        news: newsData
       };
       
       setDashboardData(mockData);
@@ -108,7 +135,7 @@ const Dashboard = () => {
           />
         </div>
         <div className="mt-8"></div>
-        <MarketSentiment data={dashboardData.marketSentiment} />
+        <NewsCards news={dashboardData.news} />
       </div>
     </div>
   );

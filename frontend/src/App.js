@@ -12,13 +12,7 @@ import axios from 'axios';
 // import IPOScreen from './components/ipos/IPOScreen';
 
 function App() {
-  useEffect(() => {
-    axios.get("http://localhost:5000/api/stocks/")
-      .then(res => console.log(res))
-      .catch(err => console.error(err));
-     }, []);
-   
-   
+
   return (
       <div className="App">
         <Routes>
