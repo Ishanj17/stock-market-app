@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
-import StockCard from './StockCard';
 import LoadingSpinner from '../common/LoadingSpinner';
 import axios from 'axios';
 
@@ -13,10 +12,10 @@ const StockScreen = () => {
   const [stocksData, setStocksData] = useState([]);
 
   const tabs = [
-    { id: 'trending', label: 'Trending', icon: '📈' },
-    { id: 'price_shockers', label: 'Price Shockers', icon: '⚡' },
-    { id: 'BSE_most_active', label: 'BSE Active', icon: '📊' },
-    { id: 'NSE_most_active', label: 'NSE Active', icon: '📊' }
+    { id: 'trending', label: 'Trending' },
+    { id: 'price_shockers', label: 'Intra-Day' },
+    { id: 'BSE_most_active', label: 'BSE Active' },
+    { id: 'NSE_most_active', label: 'NSE Active' }
   ];
 
   // Different mock data for each category
@@ -120,6 +119,35 @@ const StockScreen = () => {
     navigate('/');
   };
 
+  const formatVolume = (volume) => {
+    if (!volume) return '--';
+    const num = typeof volume === 'string' ? parseFloat(volume.replace(/,/g, '')) : volume;
+    if (num >= 10000000) {
+      return `${(num / 10000000).toFixed(2)}Cr`;
+    } else if (num >= 100000) {
+      return `${(num / 100000).toFixed(2)}L`;
+    } else if (num >= 1000) {
+      return `${(num / 1000).toFixed(2)}K`;
+    }
+    return num.toLocaleString();
+  };
+
+  const formatPriceChange = (change) => {
+    if (!change) return '--';
+    const changeStr = change.toString();
+    if (changeStr.includes('%')) {
+      return changeStr;
+    }
+    return `${change}%`;
+  };
+
+  const isPositiveChange = (change) => {
+    if (!change) return false;
+    return typeof change === 'number' 
+      ? change >= 0 
+      : !change.toString().includes('-');
+  };
+
   if (loading) return <LoadingSpinner />;
   if (error) return <div className="text-center text-red-500 p-8">{error}</div>;
 
@@ -127,21 +155,25 @@ const StockScreen = () => {
     <div className="min-h-screen bg-gray-50">
       <Header title="Stocks" showBack={true} onBack={handleBack} />
       
-      {/* Tabs */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
+      {/* Header Section */}
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="tracking-wider text-lg font-semibold text-gray-600 mb-3">
+            Stocks
+          </h1>
+          
+          {/* Navigation Buttons */}
+          <div className="flex flex-wrap gap-3 mt-4">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => handleTabClick(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                className={`px-4 py-1.5 rounded-full border-2 transition-all duration-200 text-sm font-medium ${
                   activeTab === tab.id
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'bg-transparent text-gray-600 border-gray-500'
+                    : 'bg-transparent text-gray-400 border-gray-200 hover:border-gray-500'
                 }`}
               >
-                <span className="mr-2">{tab.icon}</span>
                 {tab.label}
               </button>
             ))}
@@ -149,16 +181,63 @@ const StockScreen = () => {
         </div>
       </div>
 
-      {/* Stocks List */}
+      {/* Stocks Table */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid gap-4">
-          {stocksData.map((stock, index) => (
-            <StockCard 
-              key={index} 
-              stock={stock} 
-              onClick={() => handleStockClick(stock)}
-            />
-          ))}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-bold text-gray-600 uppercase tracking-wider">
+                  Company
+                </th>
+                <th className="px-6 py-4 text-right text-sm font-bold text-gray-600 uppercase tracking-wider">
+                  Market price
+                </th>
+                <th className="px-6 py-4 text-right text-sm font-bold text-gray-600 uppercase tracking-wider">
+                  1D price change
+                </th>
+                <th className="px-6 py-4 text-right text-sm font-bold text-gray-600 uppercase tracking-wider">
+                  Volume
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {stocksData.map((stock, index) => (
+                <tr 
+                  key={index}
+                  onClick={() => handleStockClick(stock)}
+                  className="hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-gray-600">
+                      {stock.company_name}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-700">
+                    ₹{stock.price}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                    <span className={`font-medium ${
+                      isPositiveChange(stock.percent_change) 
+                        ? 'text-green-600' 
+                        : 'text-red-600'
+                    }`}>
+                      {isPositiveChange(stock.percent_change) ? '+' : ''}{formatPriceChange(stock.percent_change)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                    {formatVolume(stock.volume)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          {stocksData.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              No stocks data available
+            </div>
+          )}
         </div>
       </div>
     </div>

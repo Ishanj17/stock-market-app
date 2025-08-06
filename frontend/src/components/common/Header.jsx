@@ -54,25 +54,28 @@ const Header = ({ title, showBack = false, onBack }) => {
         {/* Navigation Links - Right next to brand name */}
         <div className="flex items-center gap-6">
           <span 
-            className={`text-sm font-medium cursor-pointer transition-colors ${
-              activeRoute === 'stocks' ? 'text-gray-900' : 'text-gray-500'
-            } hover:text-gray-900`}
+            className={`tracking-wider text-sm font-medium cursor-pointer transition-colors ${
+              activeRoute === 'stocks' ? 'text-gray-600' : 'text-gray-400'
+            } hover:text-gray-600`}
+            style={{fontWeight: 'bold' }}
             onClick={() => handleNavClick('stocks')}
           >
             Stocks
           </span>
           <span 
-            className={`text-sm font-medium cursor-pointer transition-colors ${
-              activeRoute === 'mutual-funds' ? 'text-gray-900' : 'text-gray-500'
-            } hover:text-gray-900`}
+            className={`text-bold tracking-wider text-sm font-medium cursor-pointer transition-colors ${
+              activeRoute === 'mutual-funds' ? 'text-gray-600' : 'text-gray-400'
+            } hover:text-gray-600`}
+            style={{fontWeight: 'bold' }}
             onClick={() => handleNavClick('mutual-funds')}
           >
             Mutual Funds
           </span>
           <span 
-            className={`text-sm font-medium cursor-pointer transition-colors ${
-              activeRoute === 'ipos' ? 'text-gray-900' : 'text-gray-500'
-            } hover:text-gray-900`}
+            className={`text-bold tracking-wider text-sm font-medium cursor-pointer transition-colors ${
+              activeRoute === 'ipos' ? 'text-gray-600' : 'text-gray-400'
+            } hover:text-gray-600`}
+            style={{fontWeight: 'bold' }}
             onClick={() => handleNavClick('ipos')}
           >
             IPOs

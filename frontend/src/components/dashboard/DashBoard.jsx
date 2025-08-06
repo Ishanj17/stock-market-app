@@ -9,6 +9,7 @@ import axios from 'axios';
 import MainHero from '../common/MainHero';
 import DivideLine from '../common/DivideLine';
 import InvestmentOptions from './InvestmentOption';
+import Footer from '../common/Footer';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -110,39 +111,9 @@ const Dashboard = () => {
       <MainHero />
       <DivideLine />
       <InvestmentOptions />
-      <DivideLine /> 
-      <div className="max-w-7xl mx-auto px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <DashboardCard
-            type="trending-stocks"
-            title="Trending Stocks"
-            icon="📈"
-            data={dashboardData.trendingStocks}
-            showButton={true}
-            onClick={() => handleViewAll('trending-stocks')}
-          />
-          
-          <DashboardCard
-            type="mutual-funds"
-            title="Mutual Funds"
-            icon="💰"
-            data={dashboardData.mutualFunds}
-            onClick={() => handleViewAll('mutual-funds')}
-            showButton={true}
-          />
-          
-          <DashboardCard
-            type="ipos"
-            title="IPO Listings"
-            icon="🚀"
-            data={dashboardData.ipos}
-            onClick={() => handleViewAll('ipos')}
-            showButton={true}
-          />
-        </div>
-      </div>
       <DivideLine />
       <NewsCards news={dashboardData.news} />
+      <Footer />
     </div>
   );
 };

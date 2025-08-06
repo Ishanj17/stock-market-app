@@ -12,14 +12,6 @@ const NewsCards = ({ news }) => {
     return text.substring(0, maxLength) + '...';
   };
 
-  const handlePrev = () => {
-    setCurrentIndex(prev => prev === 0 ? (news?.length - 1) : prev - 1);
-  };
-
-  const handleNext = () => {
-    setCurrentIndex(prev => prev === (news?.length - 1) ? 0 : prev + 1);
-  };
-
   // Auto-navigation effect
   useEffect(() => {
     if (!news || news.length <= 1) return;
@@ -39,6 +31,7 @@ const NewsCards = ({ news }) => {
 
   return (
     <div className="mt-32 mb-32">      
+      <h1 className="text-2xl font-bold text-gray-500 tracking-wider mb-4 text-center font-poppins leading-tight">Latest Stock News</h1>
       <div className="relative max-w-2xl mx-auto">
         <div
           className="bg-white rounded-lg shadow-card border border-gray-200 p-6 cursor-pointer transition-all duration-300 hover:shadow-card-hover hover:border-primary-500 hover:-translate-y-1"
@@ -62,29 +55,8 @@ const NewsCards = ({ news }) => {
           </div>
         </div>
 
-        {/* Navigation Arrows - Left and Right corners */}
-        <button
-          onClick={handlePrev}
-          className="absolute left-0 top-0 transform -translate-x-16 bg-white rounded-full p-3 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors duration-200"
-          aria-label="Previous news"
-        >
-          <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        <button
-          onClick={handleNext}
-          className="absolute right-0 top-0 transform translate-x-16 bg-white rounded-full p-3 shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors duration-200"
-          aria-label="Next news"
-        >
-          <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-
         {/* Dots indicator */}
-        <div className="flex justify-center mt-4 space-x-2">
+        <div className="flex justify-center mt-6 space-x-2">
           {news.map((_, index) => (
             <button
               key={index}
