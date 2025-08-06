@@ -2,37 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../common/Header';
 import LoadingSpinner from '../common/LoadingSpinner';
+import axios from 'axios';
 
 const StockDetails = () => {
   const navigate = useNavigate();
-  const { stockId } = useParams();
-  console.log(useParams());
+  const { name } = useParams();
+  console.log(name, 'name');
   const [loading, setLoading] = useState(true);
   const [stock, setStock] = useState(null);
   const [error, setError] = useState(null);
-
-  // Mock stock database
-  const stockDatabase = {
-    'TCS': { id: 'TCS', name: 'TCS', price: '3,850', change: '+2.5%', volume: '2.5M', category: 'IT', marketCap: '₹7.2T', pe: '25.4', high: '3,920', low: '3,780' },
-    'RELIANCE': { id: 'RELIANCE', name: 'RELIANCE', price: '2,450', change: '+1.8%', volume: '1.8M', category: 'Oil & Gas', marketCap: '₹16.5T', pe: '18.2', high: '2,480', low: '2,420' },
-    'INFOSYS': { id: 'INFOSYS', name: 'INFOSYS', price: '1,650', change: '+3.1%', volume: '1.2M', category: 'IT', marketCap: '₹6.8T', pe: '22.1', high: '1,680', low: '1,620' },
-    'HDFC_BANK': { id: 'HDFC_BANK', name: 'HDFC BANK', price: '1,850', change: '+0.8%', volume: '950K', category: 'Banking', marketCap: '₹10.2T', pe: '16.8', high: '1,870', low: '1,830' },
-    'ICICI_BANK': { id: 'ICICI_BANK', name: 'ICICI BANK', price: '950', change: '+1.2%', volume: '750K', category: 'Banking', marketCap: '₹6.5T', pe: '14.2', high: '960', low: '940' },
-    'ADANI_PORTS': { id: 'ADANI_PORTS', name: 'ADANI PORTS', price: '850', change: '+15.2%', volume: '5.2M', category: 'Infrastructure', marketCap: '₹1.8T', pe: '28.5', high: '870', low: '820' },
-    'TATA_MOTORS': { id: 'TATA_MOTORS', name: 'TATA MOTORS', price: '650', change: '+12.8%', volume: '3.8M', category: 'Automobile', marketCap: '₹2.1T', pe: '15.6', high: '670', low: '630' },
-    'WIPRO': { id: 'WIPRO', name: 'WIPRO', price: '450', change: '+8.5%', volume: '2.1M', category: 'IT', marketCap: '₹2.4T', pe: '19.8', high: '460', low: '440' },
-    'BHARTI_AIRTEL': { id: 'BHARTI_AIRTEL', name: 'BHARTI AIRTEL', price: '750', change: '+6.3%', volume: '1.9M', category: 'Telecom', marketCap: '₹4.2T', pe: '12.4', high: '760', low: '740' },
-    'SUN_PHARMA': { id: 'SUN_PHARMA', name: 'SUN PHARMA', price: '950', change: '+5.7%', volume: '1.5M', category: 'Pharma', marketCap: '₹2.8T', pe: '24.6', high: '970', low: '930' }
-  };
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     const fetchStockDetails = async () => {
       setLoading(true);
       try {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 800));
+        const API_BASE_URL = process.env.REACT_APP_API_URL;
+        const res = await axios.get(`${API_BASE_URL}/api/stocks/detail?name=${name}`);
+        const stockData = res.data;
         
-        const stockData = stockDatabase[stockId];
         if (stockData) {
           setStock(stockData);
         } else {
@@ -46,10 +34,48 @@ const StockDetails = () => {
     };
 
     fetchStockDetails();
-  }, [stockId]);
+  }, [name]);
 
   const handleBack = () => {
     navigate('/stocks');
+  };
+
+  const formatNumber = (num) => {
+    if (!num) return 'N/A';
+    if (typeof num === 'string') return num;
+    if (num >= 1000000000) return `₹${(num / 1000000000).toFixed(2)}B`;
+    if (num >= 1000000) return `₹${(num / 1000000).toFixed(2)}M`;
+    if (num >= 1000) return `₹${(num / 1000).toFixed(2)}K`;
+    return num.toFixed(2);
+  };
+
+  const formatPercent = (num) => {
+    if (!num) return 'N/A';
+    return typeof num === 'string' ? num : `${num.toFixed(2)}%`;
+  };
+
+  const getChangeColor = (change) => {
+    if (typeof change === 'string') {
+      return change.startsWith('+') || change.startsWith('₹+') ? 'text-green-600' : 'text-red-600';
+    }
+    return change > 0 ? 'text-green-600' : 'text-red-600';
+  };
+
+  const tabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'metrics', label: 'Key Metrics' },
+    { id: 'peers', label: 'Peer Comparison' },
+    { id: 'news', label: 'Recent News' }
+  ];
+  
+  const customLabels = {
+    mgmtEffectiveness: "Mgmt Effectiveness",
+    incomeStatement: "Income Statement",
+    margins: "Margins",
+    persharedata: "Per Share Data",
+    priceandVolume: "Price And Volume",
+    valuation: "Valuation",
+    financialstrength: "Financial Strength"
   };
 
   if (loading) return <LoadingSpinner />;
@@ -58,76 +84,259 @@ const StockDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header title={stock.name} showBack={true} onBack={handleBack} />
+      <Header title={stock.name || 'Stock Details'} showBack={true} onBack={handleBack} />
       
-      <div className="max-w-2xl mx-auto px-2 sm:px-4 lg:px-6 py-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
-          {/* Stock Name */}
-          <h2 className="text-xl font-bold text-gray-900 mb-4 text-center">
-            {stock.name}
-          </h2>
-          
-          {/* 4x2 Grid Layout */}
-          <div className="grid grid-cols-4 gap-4">
-            {/* Row 1 */}
-            <div className="text-center p-3 bg-gray-50 rounded">
-              <div className="text-xs text-gray-600 mb-1">Current Price</div>
-              <div className="text-lg font-bold text-gray-900">₹{stock.price}</div>
-            </div>
-            
-            <div className="text-center p-3 bg-gray-50 rounded">
-              <div className="text-xs text-gray-600 mb-1">Change</div>
-              <div className={`text-lg font-bold ${
-                stock.change.startsWith('+') ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {stock.change}
+      <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-6">
+        {/* Stock Header */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{stock.name}</h1>
+              <p className="text-gray-600 mb-4">{stock.industry}</p>
+              <div className="flex flex-wrap gap-4">
+                <div className="text-3xl font-bold text-gray-900">
+                  ₹{stock.price?.NSE || stock.price?.BSE || stock.price}
+                </div>
+                <div className={`text-xl font-semibold ${getChangeColor(stock.peerCompanyList[0].percentChange)}`}>
+                  {stock.peerCompanyList[0].percentChange > 0 ? '+' : ''}{stock.peerCompanyList[0].percentChange}%
+                  <span className="text-sm ml-2">
+                    ({stock.peerCompanyList[0].netChange > 0 ? '+' : ''}₹{stock.peerCompanyList[0].netChange})
+                  </span>
+                </div>
               </div>
             </div>
-            
-            <div className="text-center p-3 bg-gray-50 rounded">
-              <div className="text-xs text-gray-600 mb-1">Volume</div>
-              <div className="text-lg font-bold text-gray-900">{stock.volume}</div>
-            </div>
-            
-            <div className="text-center p-3 bg-gray-50 rounded">
-              <div className="text-xs text-gray-600 mb-1">Category</div>
-              <div className="text-lg font-bold text-gray-900">{stock.category}</div>
-            </div>
-            
-            {/* Row 2 */}
-            <div className="text-center p-3 bg-gray-50 rounded">
-              <div className="text-xs text-gray-600 mb-1">Market Cap</div>
-              <div className="text-lg font-bold text-gray-900">{stock.marketCap}</div>
-            </div>
-            
-            <div className="text-center p-3 bg-gray-50 rounded">
-              <div className="text-xs text-gray-600 mb-1">P/E Ratio</div>
-              <div className="text-lg font-bold text-gray-900">{stock.pe}</div>
-            </div>
-            
-            <div className="text-center p-3 bg-gray-50 rounded">
-              <div className="text-xs text-gray-600 mb-1">Day High</div>
-              <div className="text-lg font-bold text-gray-900">₹{stock.high}</div>
-            </div>
-            
-            <div className="text-center p-3 bg-gray-50 rounded">
-              <div className="text-xs text-gray-600 mb-1">Day Low</div>
-              <div className="text-lg font-bold text-gray-900">₹{stock.low}</div>
+            <div className="mt-4 lg:mt-0">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="text-sm text-gray-600">Risk Level</div>
+                <div className="font-semibold">{stock.risk}</div>
+              </div>
             </div>
           </div>
-          
-          {/* Chart Placeholder */}
-          <div className="mt-6 bg-gray-100 rounded-lg p-6 flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <div className="text-3xl mb-2">📈</div>
-              <p className="text-sm font-medium">Price Chart</p>
-              <p className="text-xs">Chart will be displayed here</p>
-            </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="flex space-x-8 px-6">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          <div className="p-6">
+            {/* Overview Tab */}
+            {activeTab === 'overview' && (
+              <div className="space-y-6">
+                {/* Price Metrics Grid */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Price & Volume</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="text-xs text-gray-600 mb-1">Market Cap</div>
+                      <div className="text-lg font-bold">{formatNumber(stock.peerCompanyList[0].marketCap * 10000000)}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="text-xs text-gray-600 mb-1">P/E Ratio</div>
+                      <div className="text-lg font-bold">{stock.peerCompanyList[0].priceToEarningsValueRatio?.toFixed(2) || 'N/A'}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="text-xs text-gray-600 mb-1">52W High</div>
+                      <div className="text-lg font-bold">₹{stock.peerCompanyList[0].yhigh}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="text-xs text-gray-600 mb-1">52W Low</div>
+                      <div className="text-lg font-bold">₹{stock.peerCompanyList[0].ylow}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="text-xs text-gray-600 mb-1">P/B Ratio</div>
+                      <div className="text-lg font-bold">{stock.peerCompanyList[0].priceToBookValueRatio?.toFixed(2) || 'N/A'}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="text-xs text-gray-600 mb-1">Dividend Yield</div>
+                      <div className="text-lg font-bold">{formatPercent(stock.peerCompanyList[0].dividendYieldIndicatedAnnualDividend)}</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="text-xs text-gray-600 mb-1">Shares Outstanding</div>
+                      <div className="text-lg font-bold">{stock.peerCompanyList[0].totalSharesOutstanding}M</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="text-xs text-gray-600 mb-1">Overall Rating</div>
+                      <div className={`text-lg font-bold ${
+                        stock.peerCompanyList[0].overallRating === 'Bearish' ? 'text-red-600' : 'text-green-600'
+                      }`}>
+                        {stock.peerCompanyList[0].overallRating}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Company Description */}
+                {stock.description && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">About the Company</h3>
+                    <p className="text-gray-700 leading-relaxed">{stock.description}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Key Metrics Tab */}
+            {activeTab === 'metrics' && stock.keyMetrics && (
+              <div className="space-y-6">
+                {Object.entries(stock.keyMetrics).map(([category, metrics]) => (
+                  category !== 'incomeStatement' && category !== 'priceandVolume' && (
+                    <div key={category}>
+                      <h3 className="text-lg font-semibold mb-4 capitalize">
+                        {customLabels[category] || category.replace(/([A-Z])/g, ' $1').trim()}
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {metrics.slice(0, 9).map((metric, index) => (
+                          <div key={index} className="bg-gray-50 rounded-lg p-4">
+                            <div className="text-xs text-gray-600 mb-1">
+                              {metric.displayName}
+                            </div>
+                            <div className="text-sm font-semibold">
+                              {metric.value !== null ? 
+                                (typeof metric.value === 'number' ? 
+                                  (metric.value > 1000 ? formatNumber(metric.value) : metric.value.toFixed(2))
+                                  : metric.value
+                                ) 
+                                : 'N/A'
+                              }
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                ))}
+              </div>
+            )}
+
+            {/* Peer Comparison Tab */}
+            {activeTab === 'peers' && stock.peerCompanyList && (
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Peer Companies</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Company
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Price
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Change %
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          P/E Ratio
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Market Cap
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Rating
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {stock.peerCompanyList.map((peer, index) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              {peer.imageUrl && (
+                                <img className="h-8 w-8 rounded-full mr-3" src={peer.imageUrl} alt="" />
+                              )}
+                              <div className="text-sm font-medium text-gray-900">
+                                {peer.companyName}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ₹{peer.price}
+                          </td>
+                          <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${getChangeColor(peer.percentChange)}`}>
+                            {peer.percentChange > 0 ? '+' : ''}{peer.percentChange}%
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {peer.priceToEarningsValueRatio?.toFixed(2) || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {formatNumber(peer.marketCap * 10000000)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              peer.overallRating === 'Bearish' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {peer.overallRating}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Recent News Tab */}
+            {activeTab === 'news' && stock.recentNews && (
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Recent News</h3>
+                <div className="space-y-4">
+                  {stock.recentNews.slice(0, 8).map((news, index) => (
+                    <div key={index} className="border-b border-gray-200 pb-4 last:border-b-0">
+                      <div className="flex items-start space-x-4">
+                        {news.thumbnailimage && (
+                          <img 
+                            src={news.thumbnailimage} 
+                            alt="" 
+                            className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h4 onClick={() => window.open(news.url, '_blank')} className="text-sm font-medium text-gray-900 hover:text-blue-600 cursor-pointer">
+                            {news.headline}
+                          </h4>
+                          {news.intro && (
+                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                              {news.intro.replace(/&nbsp;/g, ' ').replace(/<[^>]*>/g, '')}
+                            </p>
+                          )}
+                          <div className="flex items-center mt-2 text-xs text-gray-500 space-x-4">
+                            <span>{news.byline}</span>
+                            <span>{news.timeToRead} min read</span>
+                            {news.premiumStory === 'true' && (
+                              <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+                                Premium
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default StockDetails;

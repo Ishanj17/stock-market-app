@@ -18,7 +18,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/stocks" element={<StockScreen />} />
-          <Route path="/stocks/:stockId" element={<StockDetails />} />
+          <Route path="/stocks/detail/:name" element={<StockDetails />} />
           <Route path="/mutual-funds" element={<MutualFundScreen />} />
           <Route path="/mutual-funds/:fundId" element={<FundDetails />} />
           <Route path="/ipos" element={<IPOScreen />} />

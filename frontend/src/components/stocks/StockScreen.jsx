@@ -21,34 +21,10 @@ const StockScreen = () => {
 
   // Different mock data for each category
   const mockDataByCategory = {
-    trending: [
-      { id: 'TCS', name: 'TCS', price: '3,850', change: '+2.5%', volume: '2.5M', category: 'IT' },
-      { id: 'RELIANCE', name: 'RELIANCE', price: '2,450', change: '+1.8%', volume: '1.8M', category: 'Oil & Gas' },
-      { id: 'INFOSYS', name: 'INFOSYS', price: '1,650', change: '+3.1%', volume: '1.2M', category: 'IT' },
-      { id: 'HDFC_BANK', name: 'HDFC BANK', price: '1,850', change: '+0.8%', volume: '950K', category: 'Banking' },
-      { id: 'ICICI_BANK', name: 'ICICI BANK', price: '950', change: '+1.2%', volume: '750K', category: 'Banking' }
-    ],
-    price_shockers: [
-      { id: 'ADANI_PORTS', name: 'ADANI PORTS', price: '850', change: '+15.2%', volume: '5.2M', category: 'Infrastructure' },
-      { id: 'TATA_MOTORS', name: 'TATA MOTORS', price: '650', change: '+12.8%', volume: '3.8M', category: 'Automobile' },
-      { id: 'WIPRO', name: 'WIPRO', price: '450', change: '+8.5%', volume: '2.1M', category: 'IT' },
-      { id: 'BHARTI_AIRTEL', name: 'BHARTI AIRTEL', price: '750', change: '+6.3%', volume: '1.9M', category: 'Telecom' },
-      { id: 'SUN_PHARMA', name: 'SUN PHARMA', price: '950', change: '+5.7%', volume: '1.5M', category: 'Pharma' }
-    ],
-    BSE_most_active: [
-      { id: 'RELIANCE', name: 'RELIANCE', price: '2,450', change: '+1.2%', volume: '8.5M', category: 'Oil & Gas' },
-      { id: 'TCS', name: 'TCS', price: '3,850', change: '+0.8%', volume: '6.2M', category: 'IT' },
-      { id: 'HDFC_BANK', name: 'HDFC BANK', price: '1,850', change: '-0.5%', volume: '5.8M', category: 'Banking' },
-      { id: 'INFOSYS', name: 'INFOSYS', price: '1,650', change: '+1.1%', volume: '4.9M', category: 'IT' },
-      { id: 'ITC', name: 'ITC', price: '450', change: '+0.3%', volume: '4.2M', category: 'FMCG' }
-    ],
-    NSE_most_active: [
-      { id: 'RELIANCE', name: 'RELIANCE', price: '2,450', change: '+1.1%', volume: '12.5M', category: 'Oil & Gas' },
-      { id: 'TCS', name: 'TCS', price: '3,850', change: '+0.9%', volume: '9.8M', category: 'IT' },
-      { id: 'HDFC_BANK', name: 'HDFC BANK', price: '1,850', change: '-0.3%', volume: '8.7M', category: 'Banking' },
-      { id: 'INFOSYS', name: 'INFOSYS', price: '1,650', change: '+1.2%', volume: '7.3M', category: 'IT' },
-      { id: 'ICICI_BANK', name: 'ICICI BANK', price: '950', change: '+0.7%', volume: '6.9M', category: 'Banking' }
-    ]
+    trending: [],
+    price_shockers: [],
+    BSE_most_active: [],
+    NSE_most_active: []
   };
 
   const fetchStocksData = async (tabType) => {
@@ -66,13 +42,11 @@ const StockScreen = () => {
           trending_stocks: { top_gainers, top_losers },
         } = await fetchTrendingStocks();
         const trendingStocks = [...top_gainers, ...top_losers];
-        console.log(trendingStocks, 'trendingStocks')
         mockDataByCategory[tabType] = trendingStocks.map(stock => ({
           company_name: stock.company_name,
           price: stock.price,
           percent_change: stock.percentChange,
-          volume: stock.volume,
-          category: ''
+          volume: stock.volume
         }))
       }
       // price shockers
@@ -88,8 +62,7 @@ const StockScreen = () => {
           company_name: stock.displayName,
           price: stock.price,
           percent_change: stock.percentChange,
-          volume: stock.volume,
-          category: ''
+          volume: stock.volume
         }))
       }
       // // BSE most active
@@ -99,13 +72,11 @@ const StockScreen = () => {
           return res.data;
         };
         const BSE_most_active = await fetchBSEMostActive();
-        console.log(BSE_most_active, 'BSE_most_active')
         mockDataByCategory[tabType] = BSE_most_active.map(stock => ({
           company_name: stock.company,
           price: stock.price,
           percent_change: stock.percent_change,
-          volume: stock.volume,
-          category: ''
+          volume: stock.volume
         }))
       }
       // // NSE most active
@@ -119,8 +90,7 @@ const StockScreen = () => {
           company_name: stock.company,
           price: stock.price,
           percent_change: stock.percent_change,
-          volume: stock.volume,
-          category: ''
+          volume: stock.volume
         }))
       }     
 
@@ -143,7 +113,7 @@ const StockScreen = () => {
 
   const handleStockClick = (stock) => {
     // Navigate to stock details page
-    navigate(`/stocks/${stock.id}`);
+    navigate(`/stocks/detail/${stock.company_name}`);
   };
 
   const handleBack = () => {
