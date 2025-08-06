@@ -6,7 +6,7 @@ const IPOCard = ({ IPO, activeTab }) => {
 
   return (
     <div 
-      onClick={() => window.open(IPO.document_url, '_blank')}
+      onClick={() => IPO.document_url && window.open(IPO.document_url, '_blank')}
       className="bg-white rounded-lg border border-gray-200 p-6 cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary-300 hover:scale-[1.02]"
     >
       <div className="flex justify-between items-center">
