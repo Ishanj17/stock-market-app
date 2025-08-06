@@ -3,46 +3,57 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
 import FundCard from './FundCard';
 import LoadingSpinner from '../common/LoadingSpinner';
+import axios from 'axios';
 
 const MutualFundScreen = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('Active');
-  const [fundsData, setFundsData] = useState([]);
+  const [activeTab, setActiveTab] = useState('Government Bond');
+  const [mockDataByCategory, setMockDataByCategory] = useState({
+    'Government Bond': [],
+    'Banking & PSU': [],
+    'Flexi Cap': [],
+    'Sector - FMCG': [],
+    'Large-Cap': [],
+    'Mid-Cap': [],
+    'Small-Cap': []
+  });
 
   const tabs = [
-    { id: 'Active', label: 'Active', icon: '📈' }
+    { id: 'Government Bond', label: 'Government Bond'},
+    { id: 'Banking & PSU', label: 'Banking & PSU'},
+    { id: 'Flexi Cap', label: 'Flexi Cap'},
+    { id: 'Sector - FMCG', label: 'Sector - FMCG'},
+    { id: 'Large-Cap', label: 'Large-Cap'},
+    { id: 'Mid-Cap', label: 'Mid-Cap'},
+    { id: 'Small-Cap', label: 'Small-Cap'}
   ];
 
-  // Different mock data for each category
-  const mockDataByCategory = {
-    Active: [
-        { id: 'AXISBLUECHIP', name: 'Axis Bluechip Fund', price: '45.23', change: '+1.5%', volume: '1.2M', category: 'Large Cap' },
-        { id: 'SBI_SMALLCAP', name: 'SBI Small Cap Fund', price: '115.40', change: '+2.1%', volume: '900K', category: 'Small Cap' },
-        { id: 'HDFC_HYBRID', name: 'HDFC Hybrid Equity Fund', price: '78.90', change: '+0.9%', volume: '850K', category: 'Hybrid' },
-        { id: 'NIPPON_INDIA', name: 'Nippon India Growth Fund', price: '125.75', change: '+1.8%', volume: '650K', category: 'Mid Cap' },
-        { id: 'MIRAE_ASSET', name: 'Mirae Asset Emerging Bluechip', price: '98.35', change: '+2.3%', volume: '720K', category: 'Large & Mid Cap' }
-      ]      
-  };
-
-  const fetchFundsData = async (tabType) => {
-    setLoading(true);
-    try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const mockData = mockDataByCategory[tabType] || [];
-      setFundsData(mockData);
-    } catch (err) {
-      setError('Failed to load funds data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchFundsData(activeTab);
-  }, [activeTab]);
+    const API_BASE_URL = process.env.REACT_APP_API_URL;
+  
+    const fetchMutualFunds = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/mutualfunds`);
+        const data = res.data;
+  
+        setMockDataByCategory({
+          'Government Bond': data?.Debt?.['Government Bond'] || [],
+          'Banking & PSU': data?.Debt?.['Banking & PSU'] || [],
+          'Flexi Cap': data?.Equity?.['Flexi Cap'] || [],
+          'Sector - FMCG': data?.Equity?.['Sector - FMCG'] || [],
+          'Large-Cap': data?.Equity?.['Large-Cap'] || [],
+          'Mid-Cap': data?.Equity?.['Mid-Cap'] || [],
+          'Small-Cap': data?.Equity?.['Small-Cap'] || []
+        });
+      } catch (error) {
+        console.error('Error fetching mutual funds:', error);
+      }
+    };
+  
+    fetchMutualFunds();
+  }, []);
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
@@ -50,11 +61,11 @@ const MutualFundScreen = () => {
 
   const handleStockClick = (fund) => {
     // Navigate to fund details page
-    navigate(`/mutual-funds/${fund.id}`);
+    navigate(`/mutual-funds/details/${fund.fund_name}`);
   };
 
   const handleBack = () => {
-    navigate('/');
+    navigate('/mutual-funds');
   };
 
   if (loading) return <LoadingSpinner />;
@@ -89,11 +100,13 @@ const MutualFundScreen = () => {
       {/* Stocks List */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid gap-4">
-          {fundsData.map((fund, index) => (
+          {mockDataByCategory[activeTab] && mockDataByCategory[activeTab].map((fund, index) => (
             <FundCard 
               key={index} 
               fund={fund} 
-              onClick={() => handleStockClick(fund)}
+              onClick={() => {
+                handleStockClick(fund);
+              }}
             />
           ))}
         </div>

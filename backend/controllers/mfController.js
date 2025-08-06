@@ -11,7 +11,7 @@ const mfController = {
   },
   async getMFDetails(req, res) {
     try {
-      const name = req.query.name;
+      const name = req.query.fund_name;
       const data = await mfService.getMFDetails(name);
       res.json(data);
     } catch (err) {

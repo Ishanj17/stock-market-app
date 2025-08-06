@@ -3,46 +3,47 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
 import IPOCard from './IPOCard';
 import LoadingSpinner from '../common/LoadingSpinner';
+import axios from 'axios';
 
 const IPOScreen = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('Active');
-  const [iposData, setIposData] = useState([]);
+  const [activeTab, setActiveTab] = useState('upcoming');
+  const [iposData, setIposData] = useState({
+    upcoming: [],
+    active: [],
+    closed: []
+  });
 
   const tabs = [
-    { id: 'Active', label: 'Active', icon: '📈' }
+    { id: 'upcoming', label: 'Upcoming' },
+    { id: 'active', label: 'Active' },
+    { id: 'closed', label: 'Closed' }
   ];
 
-  // Different mock data for each category
-  const mockDataByCategory = {
-    Active: [
-        { id: 'OLA_ELECTRIC', name: 'Ola Electric Mobility Ltd', price: '180.00', change: '+5.2%', volume: '3.5M', category: 'Electric Vehicles' },
-        { id: 'BOAT_LIFESTYLE', name: 'boAt Lifestyle Ltd', price: '105.50', change: '+3.8%', volume: '2.1M', category: 'Consumer Electronics' },
-        { id: 'MOBIKWIK', name: 'MobiKwik Systems Ltd', price: '145.20', change: '+6.4%', volume: '1.9M', category: 'Fintech' },
-        { id: 'PHARMEASY', name: 'API Holdings (PharmEasy)', price: '90.40', change: '+4.1%', volume: '2.3M', category: 'Healthcare' },
-        { id: 'FIRSTCRY', name: 'FirstCry (BrainBees Solutions)', price: '225.00', change: '+7.2%', volume: '2.8M', category: 'E-Commerce' }
-      ]   
-  };
-
-  const fetchIposData = async (tabType) => {
-    setLoading(true);
-    try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const mockData = mockDataByCategory[tabType] || [];
-      setIposData(mockData);
-    } catch (err) {
-      setError('Failed to load ipos data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchIposData(activeTab);
-  }, [activeTab]);
+    const API_BASE_URL = process.env.REACT_APP_API_URL;
+    setLoading(true);
+    const fetchIpos = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/ipos`);
+        const data = res.data;
+        setIposData({
+          upcoming: data.upcoming,
+          active: data.active,
+          closed: data.closed
+        });
+      } catch (error) {
+        console.error('Error fetching ipos:', error);
+        setError('Failed to load ipos data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchIpos();
+  }, []);
+
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
@@ -50,11 +51,11 @@ const IPOScreen = () => {
 
   const handleIpoClick = (ipo) => {
     // Navigate to ipo details page
-    navigate(`/ipos/${ipo.id}`);
+    navigate(`/ipos/${ipo.name}`);
   };
 
   const handleBack = () => {
-    navigate('/');
+    navigate('/ipos');
   };
 
   if (loading) return <LoadingSpinner />;
@@ -89,11 +90,11 @@ const IPOScreen = () => {
       {/* Stocks List */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid gap-4">
-          {iposData.map((IPO, index) => (
+          {iposData[activeTab].map((IPO, index) => (
             <IPOCard 
               key={index} 
               IPO={IPO} 
-              onClick={() => handleIpoClick(IPO)}
+              activeTab={activeTab}
             />
           ))}
         </div>

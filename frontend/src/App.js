@@ -6,10 +6,6 @@ import StockDetails from './components/stocks/StockDetails';
 import MutualFundScreen from './components/mutual-funds/MutualFundScreen';
 import FundDetails from './components/mutual-funds/FundDetails';
 import IPOScreen from './components/ipos/IPOScreen';
-import IPODetails from './components/ipos/IPODetails';
-import { useEffect } from 'react';
-import axios from 'axios';
-// import IPOScreen from './components/ipos/IPOScreen';
 
 function App() {
 
@@ -20,9 +16,8 @@ function App() {
           <Route path="/stocks" element={<StockScreen />} />
           <Route path="/stocks/detail/:name" element={<StockDetails />} />
           <Route path="/mutual-funds" element={<MutualFundScreen />} />
-          <Route path="/mutual-funds/:fundId" element={<FundDetails />} />
+          <Route path="/mutual-funds/details/:name" element={<FundDetails />} />
           <Route path="/ipos" element={<IPOScreen />} />
-          <Route path="/ipos/:ipoId" element={<IPODetails />} />
         </Routes>
       </div>
   );
