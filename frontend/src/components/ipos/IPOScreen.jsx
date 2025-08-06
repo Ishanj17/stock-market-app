@@ -9,7 +9,7 @@ const IPOScreen = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState('active');
   const [iposData, setIposData] = useState({
     upcoming: [],
     active: [],

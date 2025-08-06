@@ -38,9 +38,7 @@ const NewsCards = ({ news }) => {
   const currentArticle = news[currentIndex];
 
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 font-poppins text-center">Latest News</h2>
-      
+    <div className="mt-32 mb-32">      
       <div className="relative max-w-2xl mx-auto">
         <div
           className="bg-white rounded-lg shadow-card border border-gray-200 p-6 cursor-pointer transition-all duration-300 hover:shadow-card-hover hover:border-primary-500 hover:-translate-y-1"

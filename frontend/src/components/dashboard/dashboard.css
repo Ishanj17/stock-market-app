@@ -1,0 +1,10 @@
+/* src/styles/hero.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@700;800&display=swap');
+
+.hero-heading {
+  font-family: 'Inter', sans-serif;
+  font-size: 50px;
+  font-weight: 800;
+  color: #58585c;
+  margin-bottom: 20px;
+}

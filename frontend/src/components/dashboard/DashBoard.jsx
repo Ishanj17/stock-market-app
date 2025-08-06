@@ -6,6 +6,9 @@ import NewsCards from './NewsCards';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
 import axios from 'axios';
+import MainHero from '../common/MainHero';
+import DivideLine from '../common/DivideLine';
+import InvestmentOptions from './InvestmentOption';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -104,7 +107,10 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
+      <MainHero />
+      <DivideLine />
+      <InvestmentOptions />
+      <DivideLine /> 
       <div className="max-w-7xl mx-auto px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <DashboardCard
@@ -134,9 +140,9 @@ const Dashboard = () => {
             showButton={true}
           />
         </div>
-        <div className="mt-8"></div>
-        <NewsCards news={dashboardData.news} />
       </div>
+      <DivideLine />
+      <NewsCards news={dashboardData.news} />
     </div>
   );
 };
