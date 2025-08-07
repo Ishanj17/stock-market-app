@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
 import LoadingSpinner from '../common/LoadingSpinner';
 import axios from 'axios';
+import Footer from '../common/Footer';
 
 const MutualFundScreen = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const MutualFundScreen = () => {
   ];
 
   useEffect(() => {
+    setLoading(true);
     const API_BASE_URL = process.env.REACT_APP_API_URL;
   
     const fetchMutualFunds = async () => {
@@ -48,6 +50,8 @@ const MutualFundScreen = () => {
         });
       } catch (error) {
         console.error('Error fetching mutual funds:', error);
+      } finally {
+        setLoading(false);
       }
     };
   
@@ -135,9 +139,9 @@ const MutualFundScreen = () => {
       </div>
 
       {/* Mutual Funds Table */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="shadow-md border-2 border-gray-200 min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-bold text-gray-600 uppercase tracking-wider">
@@ -205,6 +209,7 @@ const MutualFundScreen = () => {
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
 import LoadingSpinner from '../common/LoadingSpinner';
 import axios from 'axios';
+import Footer from '../common/Footer';
 
 const StockScreen = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ const StockScreen = () => {
 
   const tabs = [
     { id: 'trending', label: 'Trending' },
-    { id: 'price_shockers', label: 'Intra-Day' },
+    { id: 'price_shockers', label: 'Shockers' },
     { id: 'BSE_most_active', label: 'BSE Active' },
     { id: 'NSE_most_active', label: 'NSE Active' }
   ];
@@ -182,9 +183,9 @@ const StockScreen = () => {
       </div>
 
       {/* Stocks Table */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="shadow-md border-2 border-gray-200 min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-bold text-gray-600 uppercase tracking-wider">
@@ -240,6 +241,7 @@ const StockScreen = () => {
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

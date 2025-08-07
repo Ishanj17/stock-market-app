@@ -62,7 +62,7 @@ const IPOScreen = () => {
 
   const renderUpcomingTable = () => (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200">
+      <table className="shadow-md border-2 border-gray-200 min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
             <th className="px-6 py-4 text-left text-sm font-bold text-gray-600 uppercase tracking-wider">
@@ -109,7 +109,7 @@ const IPOScreen = () => {
 
   const renderActiveTable = () => (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200">
+      <table className="shadow-md border-2 border-gray-200 min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
             <th className="px-6 py-4 text-left text-sm font-bold text-gray-600 uppercase tracking-wider">
@@ -162,7 +162,7 @@ const IPOScreen = () => {
 
   const renderClosedTable = () => (
     <div className="bg-white rounded-lg shadow overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200">
+      <table className="shadow-md border-2 border-gray-200 min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
             <th className="px-6 py-4 text-left text-sm font-bold text-gray-600 uppercase tracking-wider">

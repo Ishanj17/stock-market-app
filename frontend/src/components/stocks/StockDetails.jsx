@@ -3,11 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../common/Header';
 import LoadingSpinner from '../common/LoadingSpinner';
 import axios from 'axios';
+import './stocks.css';
 
 const StockDetails = () => {
   const navigate = useNavigate();
-  const { name } = useParams();
-  console.log(name, 'name');
+  let { name } = useParams();
+  name = name.split(' ')[0];
+  
   const [loading, setLoading] = useState(true);
   const [stock, setStock] = useState(null);
   const [error, setError] = useState(null);
@@ -20,7 +22,7 @@ const StockDetails = () => {
         const API_BASE_URL = process.env.REACT_APP_API_URL;
         const res = await axios.get(`${API_BASE_URL}/api/stocks/detail?name=${name}`);
         const stockData = res.data;
-        
+
         if (stockData) {
           setStock(stockData);
         } else {
@@ -63,20 +65,9 @@ const StockDetails = () => {
 
   const tabs = [
     { id: 'overview', label: 'Overview' },
-    { id: 'metrics', label: 'Key Metrics' },
     { id: 'peers', label: 'Peer Comparison' },
     { id: 'news', label: 'Recent News' }
   ];
-  
-  const customLabels = {
-    mgmtEffectiveness: "Mgmt Effectiveness",
-    incomeStatement: "Income Statement",
-    margins: "Margins",
-    persharedata: "Per Share Data",
-    priceandVolume: "Price And Volume",
-    valuation: "Valuation",
-    financialstrength: "Financial Strength"
-  };
 
   if (loading) return <LoadingSpinner />;
   if (error) return <div className="text-center text-red-500 p-8">{error}</div>;
@@ -88,16 +79,20 @@ const StockDetails = () => {
       
       <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-6">
         {/* Stock Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="bg-white rounded-lg p-6 mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{stock.name}</h1>
-              <p className="text-gray-600 mb-4">{stock.industry}</p>
+              <h1 className="hero-heading font-bold mb-1"
+                  style={{fontSize: '30px', fontWeight: '700'}}
+              >
+                {stock.name}
+              </h1>
+              <p className="hero-subheading mb-1">{stock.industry} Industry</p>
               <div className="flex flex-wrap gap-4">
-                <div className="text-3xl font-bold text-gray-900">
+                <div className="text-2xl font-bold text-gray-500">
                   ₹{stock.price?.NSE || stock.price?.BSE || stock.price}
                 </div>
-                <div className={`text-xl font-semibold ${getChangeColor(stock.peerCompanyList[0].percentChange)}`}>
+                <div className={`mt-2 text-sm font-semibold ${getChangeColor(stock.peerCompanyList[0].percentChange)}`}>
                   {stock.peerCompanyList[0].percentChange > 0 ? '+' : ''}{stock.peerCompanyList[0].percentChange}%
                   <span className="text-sm ml-2">
                     ({stock.peerCompanyList[0].netChange > 0 ? '+' : ''}₹{stock.peerCompanyList[0].netChange})
@@ -107,15 +102,15 @@ const StockDetails = () => {
             </div>
             <div className="mt-4 lg:mt-0">
               <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm text-gray-600">Risk Level</div>
-                <div className="font-semibold">{stock.risk}</div>
+                <div className="hero-subheading">Risk Level</div>
+                <div className="font-semibold text-gray-500">{stock.risk}</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+        <div className="rounded-lg shadow-md border border-gray-200 mb-6">
           <div className="border-b border-gray-200">
             <nav className="flex space-x-8 px-6">
               {tabs.map((tab) => (
@@ -124,8 +119,8 @@ const StockDetails = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`py-4 px-1 border-b-2 font-medium text-sm ${
                     activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      ? 'border-blue-500 text-blue-400'
+                      : 'border-transparent text-gray-400 hover:text-gray-600'
                   }`}
                 >
                   {tab.label}
@@ -140,39 +135,39 @@ const StockDetails = () => {
               <div className="space-y-6">
                 {/* Price Metrics Grid */}
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">Price & Volume</h3>
+                  <h3 className="text-gray-500 font-bold mb-4">Price & Volume</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="text-xs text-gray-600 mb-1">Market Cap</div>
-                      <div className="text-lg font-bold">{formatNumber(stock.peerCompanyList[0].marketCap * 10000000)}</div>
+                      <div className="text-md font-semibold">{formatNumber(stock.peerCompanyList[0].marketCap * 10000000)}</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="text-xs text-gray-600 mb-1">P/E Ratio</div>
-                      <div className="text-lg font-bold">{stock.peerCompanyList[0].priceToEarningsValueRatio?.toFixed(2) || 'N/A'}</div>
+                      <div className="text-md font-semibold">{stock.peerCompanyList[0].priceToEarningsValueRatio?.toFixed(2) || 'N/A'}</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="text-xs text-gray-600 mb-1">52W High</div>
-                      <div className="text-lg font-bold">₹{stock.peerCompanyList[0].yhigh}</div>
+                      <div className="text-md font-semibold">₹{stock.peerCompanyList[0].yhigh}</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="text-xs text-gray-600 mb-1">52W Low</div>
-                      <div className="text-lg font-bold">₹{stock.peerCompanyList[0].ylow}</div>
+                      <div className="text-md font-semibold">₹{stock.peerCompanyList[0].ylow}</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="text-xs text-gray-600 mb-1">P/B Ratio</div>
-                      <div className="text-lg font-bold">{stock.peerCompanyList[0].priceToBookValueRatio?.toFixed(2) || 'N/A'}</div>
+                      <div className="text-md font-semibold">{stock.peerCompanyList[0].priceToBookValueRatio?.toFixed(2) || 'N/A'}</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="text-xs text-gray-600 mb-1">Dividend Yield</div>
-                      <div className="text-lg font-bold">{formatPercent(stock.peerCompanyList[0].dividendYieldIndicatedAnnualDividend)}</div>
+                      <div className="text-md font-semibold">{formatPercent(stock.peerCompanyList[0].dividendYieldIndicatedAnnualDividend)}</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="text-xs text-gray-600 mb-1">Shares Outstanding</div>
-                      <div className="text-lg font-bold">{stock.peerCompanyList[0].totalSharesOutstanding}M</div>
+                      <div className="text-md font-semibold">{stock.peerCompanyList[0].totalSharesOutstanding}M</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="text-xs text-gray-600 mb-1">Overall Rating</div>
-                      <div className={`text-lg font-bold ${
+                      <div className={`text-md font-semibold ${
                         stock.peerCompanyList[0].overallRating === 'Bearish' ? 'text-red-600' : 'text-green-600'
                       }`}>
                         {stock.peerCompanyList[0].overallRating}
@@ -184,70 +179,37 @@ const StockDetails = () => {
                 {/* Company Description */}
                 {stock.description && (
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">About the Company</h3>
-                    <p className="text-gray-700 leading-relaxed">{stock.description}</p>
+                    <h3 className="text-gray-500 font-bold mb-4">About the Company</h3>
+                    <p className="text-gray-700 text-sm leading-relaxed">{stock.description}</p>
                   </div>
                 )}
-              </div>
-            )}
-
-            {/* Key Metrics Tab */}
-            {activeTab === 'metrics' && stock.keyMetrics && (
-              <div className="space-y-6">
-                {Object.entries(stock.keyMetrics).map(([category, metrics]) => (
-                  category !== 'incomeStatement' && category !== 'priceandVolume' && (
-                    <div key={category}>
-                      <h3 className="text-lg font-semibold mb-4 capitalize">
-                        {customLabels[category] || category.replace(/([A-Z])/g, ' $1').trim()}
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {metrics.slice(0, 9).map((metric, index) => (
-                          <div key={index} className="bg-gray-50 rounded-lg p-4">
-                            <div className="text-xs text-gray-600 mb-1">
-                              {metric.displayName}
-                            </div>
-                            <div className="text-sm font-semibold">
-                              {metric.value !== null ? 
-                                (typeof metric.value === 'number' ? 
-                                  (metric.value > 1000 ? formatNumber(metric.value) : metric.value.toFixed(2))
-                                  : metric.value
-                                ) 
-                                : 'N/A'
-                              }
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                ))}
               </div>
             )}
 
             {/* Peer Comparison Tab */}
             {activeTab === 'peers' && stock.peerCompanyList && (
               <div>
-                <h3 className="text-lg font-semibold mb-4">Peer Companies</h3>
-                <div className="overflow-x-auto">
+                <h3 className="text-gray-500 font-bold mb-4">Peer Companies</h3>
+                <div className="overflow-x-auto rounded-lg shadow-md border border-gray-100">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium font-semibold text-gray-500 uppercase tracking-wider">
                           Company
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium font-semibold text-gray-500 uppercase tracking-wider">
                           Price
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium font-semibold text-gray-500 uppercase tracking-wider">
                           Change %
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium font-semibold text-gray-500 uppercase tracking-wider">
                           P/E Ratio
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium font-semibold text-gray-500 uppercase tracking-wider">
                           Market Cap
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium font-semibold text-gray-500 uppercase tracking-wider">
                           Rating
                         </th>
                       </tr>
@@ -260,7 +222,7 @@ const StockDetails = () => {
                               {peer.imageUrl && (
                                 <img className="h-8 w-8 rounded-full mr-3" src={peer.imageUrl} alt="" />
                               )}
-                              <div className="text-sm font-medium text-gray-900">
+                              <div className="text-sm text-gray-900">
                                 {peer.companyName}
                               </div>
                             </div>
@@ -295,8 +257,8 @@ const StockDetails = () => {
             {/* Recent News Tab */}
             {activeTab === 'news' && stock.recentNews && (
               <div>
-                <h3 className="text-lg font-semibold mb-4">Recent News</h3>
-                <div className="space-y-4">
+                <h3 className="text-gray-500 font-bold mb-4">Recent News</h3>
+                <div className="space-y-4 rounded-lg shadow-md border border-gray-100 p-4">
                   {stock.recentNews.slice(0, 8).map((news, index) => (
                     <div key={index} className="border-b border-gray-200 pb-4 last:border-b-0">
                       <div className="flex items-start space-x-4">
