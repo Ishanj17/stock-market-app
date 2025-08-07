@@ -8,7 +8,7 @@ import './stocks.css';
 const StockDetails = () => {
   const navigate = useNavigate();
   let { name } = useParams();
-  name = name.split(' ')[0];
+  // name = name.split(' ')[0];
   
   const [loading, setLoading] = useState(true);
   const [stock, setStock] = useState(null);

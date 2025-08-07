@@ -16,7 +16,7 @@ const MainHero = () => {
       </div>
       
       {/* Text Section - Positioned above image with overlap */}
-      <div className="absolute top-[40%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+      <div className="absolute top-[40%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
         <h1 className="hero-heading text-center whitespace-nowrap tracking-widest">
           Crash. Learn. Groww.
         </h1>

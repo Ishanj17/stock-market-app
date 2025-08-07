@@ -1,9 +1,11 @@
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import LoginModal from '../auth/LoginModal';
 
 const Header = ({ title, showBack = false, onBack }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const handleLogoClick = () => {
     navigate('/');
@@ -83,26 +85,17 @@ const Header = ({ title, showBack = false, onBack }) => {
         </div>
       </div>
       
-      {/* Right Section - Search and Login */}
       <div className="flex items-center gap-6">
-        {/* Search Bar */}
-        <div className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50">
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input 
-            type="text" 
-            placeholder="Search Crash!..." 
-            className="bg-transparent text-sm text-gray-600 placeholder-gray-400 outline-none"
-          />
-          <span className="text-xs text-gray-400">Ctrl+K</span>
-        </div>
-        
         {/* Login/Sign up Button */}
-        <button className="bg-gradient-to-r from-teal-500 to-green-500 text-white px-6 py-2 rounded-lg font-medium hover:from-teal-600 hover:to-green-600 transition-all duration-200">
+        <button 
+          onClick={() => setIsLoginModalOpen(true)}
+          className="bg-gradient-to-r from-teal-500 to-green-500 text-white px-6 py-2 rounded-lg font-medium hover:from-teal-600 hover:to-green-600 transition-all duration-200"
+        >
           Login/Sign up
         </button>
       </div>
+
+      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
     </div>
   );
 };
