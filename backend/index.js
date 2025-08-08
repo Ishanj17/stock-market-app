@@ -10,7 +10,6 @@ const commoditiesRoutes = require('./routes/commodities');
 const mfRoutes = require('./routes/mutualFunds');
 const ipoRoutes = require('./routes/ipos');
 const newsRoutes = require('./routes/news');
-const userRoutes = require('./routes/user');
 
 app.use(cors());
 app.use(express.json());
@@ -21,10 +20,8 @@ app.use('/api/commodities', commoditiesRoutes);
 app.use('/api/mutualfunds', mfRoutes);
 app.use('/api/ipos', ipoRoutes);
 app.use('/api/news', newsRoutes);
-// internal calls
-app.use('/api/user',userRoutes);
 
 const PORT = 5000;
-app.listen(PORT,'0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`✅ Backend running at http://localhost:${PORT}`);
 });

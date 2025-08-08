@@ -11,6 +11,7 @@ const AuthModal = ({ isOpen, onClose }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isExistingUser, setIsExistingUser] = useState(false);
   const options = ['Stocks', 'Mutual Funds', 'IPOs'];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
@@ -27,14 +28,13 @@ const AuthModal = ({ isOpen, onClose }) => {
   // Mock API call to check if user exists
   const checkUserExists = async (email) => {
     // Simulate API call
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const response = await fetch(`${apiUrl}/api/user/email-verification`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ "email": email }),
-    })
-    const data = await response.json();
-    return data.exists;
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Mock logic: if email contains 'test' it's existing user
+        const exists = email.includes('test');
+        resolve(exists);
+      }, 1000);
+    });
   };
 
   const handleEmailContinue = async () => {
@@ -42,6 +42,7 @@ const AuthModal = ({ isOpen, onClose }) => {
       setLoading(true);
       try {
         const userExists = await checkUserExists(email);
+        setIsExistingUser(userExists);
         setStep(userExists ? 'password' : 'signup');
       } catch (error) {
         console.error('Error checking user:', error);
@@ -53,13 +54,10 @@ const AuthModal = ({ isOpen, onClose }) => {
 
   const handleLogin = async () => {
     setLoading(true);
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const response = await fetch(`${apiUrl}/api/user/login`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ "email": email, "password": password }),
-    })
-    const data = await response.json();
+    setTimeout(() => {
+      setLoading(false);
+      onClose();
+    }, 1000);
   };
 
   const handleSignUp = async () => {
@@ -68,15 +66,10 @@ const AuthModal = ({ isOpen, onClose }) => {
       return;
     }
     setLoading(true);
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const response = await fetch(`${apiUrl}/api/user/sign-up`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ "email": email, "password": password, "first_name": name }),
-    })
-    const data = await response.json();
-    console.log(data, 'data');
-    setLoading(false)
+    setTimeout(() => {
+      setLoading(false);
+      onClose();
+    }, 1000);
   };
 
   const handleGoogleAuth = () => {
@@ -89,6 +82,7 @@ const AuthModal = ({ isOpen, onClose }) => {
     setConfirmPassword('');
     setName('');
     setStep('email');
+    setIsExistingUser(false);
     setShowPassword(false);
     setShowConfirmPassword(false);
   };
@@ -150,23 +144,23 @@ const AuthModal = ({ isOpen, onClose }) => {
             {step === 'email' && (
               <div>
                 {/* Google Auth Button */}
-                {/* <button
+                <button
                   onClick={handleGoogleAuth}
                   className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors mb-6"
                 >
                   <FaGoogle className="w-5 h-5 mr-3" />
                   Continue with Google
-                </button> */}
+                </button>
 
                 {/* Divider */}
-                {/* <div className="relative mb-6">
+                <div className="relative mb-6">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-gray-300"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
                     <span className="px-2 bg-white text-gray-500">Or</span>
                   </div>
-                </div> */}
+                </div>
 
                 <label className="block text-sm font-medium mt-8 mb-2"
                       style={{
@@ -282,6 +276,7 @@ const AuthModal = ({ isOpen, onClose }) => {
             )}
 
             {/* Signup Step (for new users) */}
+            {/* Signup Step (for new users) */}
             {step === 'signup' && (
               <div>
                 {/* Show Email (Non-editable) */}
@@ -309,7 +304,7 @@ const AuthModal = ({ isOpen, onClose }) => {
                       color: '#00D09C'
                     }}
                   >
-                    Name
+                    Full Name
                   </label>
                   <input
                     type="text"
