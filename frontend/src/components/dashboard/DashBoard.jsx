@@ -33,7 +33,6 @@ const Dashboard = () => {
       const newsData = await fetchNews();
       if(Array.isArray(newsData)) {
         setNews(newsData);
-        console.log(newsData, "newsData");
       }
       else {
         setNews([]);
