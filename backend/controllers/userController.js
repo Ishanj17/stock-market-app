@@ -1,5 +1,6 @@
-const {findUserByEmail, createUser, passwordCheck} = require('../models/userLogin'); 
+const {findUserByEmail, createUser} = require('../models/userLogin'); 
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');  
 
 const userController = {
 
@@ -32,7 +33,8 @@ const userController = {
 				const userCreation = await createUser({ first_name, email, password_hash });
 	
 					if(userCreation) {
-							return res.json({ code: 200, created: true, message: 'User Created Successfully!'});
+            const jwtToken = jwt.sign({ email: email }, process.env.JWT_SECRET, { expiresIn: '1h' });  
+            return res.json({ code: 200, created: true, message: 'User Created Successfully!', token: jwtToken });
 					} else {
 							return res.json({code: 200, created: false, message: 'User Created Failed!'})
 					} 
@@ -53,7 +55,9 @@ const userController = {
 			}
 			const match = await bcrypt.compare(password, user.password_hash);
 			if (match) {
-					return res.json({ code: 200, success: true, message: 'User logged in successfully!' });
+        console.log(user, "user");
+        const jwtToken = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        return res.json({ code: 200, success: true, message: 'User logged in successfully!', token: jwtToken });
 			} else {
 					return res.status(401).json({ code: 401, success: false, message: 'Invalid password' });
 			}
