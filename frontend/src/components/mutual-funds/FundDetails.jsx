@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../common/Header';
 import LoadingSpinner from '../common/LoadingSpinner';
+import { SkeletonCard, SkeletonChart } from '../common/SkeletonLoader';
 import axios from 'axios';
 import './funds.css';
 import Footer from '../common/Footer';
@@ -20,7 +21,9 @@ const FundDetails = () => {
     const fetchFundDetails = async () => {
       setLoading(true);
       try {
-        // Mock data structure based on the provided JSON
+        // MOCK API - Replace with real API call
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
+        
         const API_BASE_URL = process.env.REACT_APP_API_URL;
         const res = await axios.get(`${API_BASE_URL}/api/mutualfunds/details?fund_name=${fund_name}`);
         const data = res.data;
@@ -153,7 +156,35 @@ const FundDetails = () => {
     );
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header title="Fund Details" />
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="mb-8">
+            <div className="h-8 bg-gray-200 rounded animate-pulse w-64 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-96"></div>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content Skeleton */}
+            <div className="lg:col-span-2 space-y-6">
+              <SkeletonCard />
+              <SkeletonChart height="h-80" />
+              <SkeletonCard />
+            </div>
+            
+            {/* Sidebar Skeleton */}
+            <div className="space-y-6">
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
   if (error) return <div className="text-center text-red-500 p-8">{error}</div>;
   if (!fund) return <div className="text-center text-gray-500 p-8">Fund not found</div>;
 
@@ -379,7 +410,10 @@ const FundDetails = () => {
           </div>
         )}
       </div>
-
+      
+      {/* Footer spacing */}
+      <div className="mt-16 mb-8"></div>
+      
       <Footer />
     </div>
   );

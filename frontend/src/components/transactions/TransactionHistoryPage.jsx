@@ -1,0 +1,710 @@
+import React, { useState, useEffect } from 'react';
+import { FaHistory, FaDownload, FaFilter, FaSearch, FaEye, FaFileAlt, FaReceipt, FaTimes } from 'react-icons/fa';
+import Header from '../common/Header';
+import { SkeletonTable, SkeletonTransactionRow } from '../common/SkeletonLoader';
+import Footer from '../common/Footer';
+
+// Mock data for transactions
+const mockTransactions = [
+  {
+    id: 1,
+    type: 'BUY',
+    stockName: 'Apple Inc.',
+    symbol: 'AAPL',
+    quantity: 10,
+    price: 175.50,
+    totalAmount: 1755.00,
+    date: '2024-01-15T10:30:00Z',
+    status: 'COMPLETED',
+    transactionId: 'TXN_001',
+    fees: 15.50,
+    exchange: 'NSE'
+  },
+  {
+    id: 2,
+    type: 'SELL',
+    stockName: 'Tesla Inc.',
+    symbol: 'TSLA',
+    quantity: 5,
+    price: 250.00,
+    totalAmount: 1250.00,
+    date: '2024-01-14T14:20:00Z',
+    status: 'COMPLETED',
+    transactionId: 'TXN_002',
+    fees: 12.50,
+    exchange: 'NSE'
+  },
+  {
+    id: 3,
+    type: 'BUY',
+    stockName: 'Microsoft Corp.',
+    symbol: 'MSFT',
+    quantity: 8,
+    price: 320.00,
+    totalAmount: 2560.00,
+    date: '2024-01-13T09:15:00Z',
+    status: 'COMPLETED',
+    transactionId: 'TXN_003',
+    fees: 20.00,
+    exchange: 'NSE'
+  },
+  {
+    id: 4,
+    type: 'DEPOSIT',
+    amount: 5000.00,
+    date: '2024-01-12T16:45:00Z',
+    status: 'COMPLETED',
+    transactionId: 'TXN_004',
+    fees: 0.00,
+    exchange: 'Bank Transfer'
+  },
+  {
+    id: 5,
+    type: 'WITHDRAWAL',
+    amount: 1000.00,
+    date: '2024-01-11T11:30:00Z',
+    status: 'COMPLETED',
+    transactionId: 'TXN_005',
+    fees: 25.00,
+    exchange: 'Bank Transfer'
+  },
+  {
+    id: 6,
+    type: 'BUY',
+    stockName: 'Google LLC',
+    symbol: 'GOOGL',
+    quantity: 3,
+    price: 2800.00,
+    totalAmount: 8400.00,
+    date: '2024-01-10T13:20:00Z',
+    status: 'COMPLETED',
+    transactionId: 'TXN_006',
+    fees: 30.00,
+    exchange: 'NSE'
+  }
+];
+
+const TransactionHistoryPage = () => {
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filter, setFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateRange, setDateRange] = useState('all');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+
+  useEffect(() => {
+    // MOCK API - Replace with real API call
+    setTimeout(() => {
+      setLoading(false);
+      setTransactions(mockTransactions);
+    }, 1500); // Simulate API delay
+  }, []);
+
+  const fetchTransactions = async () => {
+    setLoading(true);
+    try {
+      // Mock API call with timeout
+      setTimeout(() => {
+        setTransactions(mockTransactions);
+        setLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      setError('Failed to fetch transactions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredTransactions = transactions.filter(transaction => {
+    const matchesFilter = filter === 'all' || transaction.type === filter;
+    const matchesSearch = transaction.stockName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         transaction.symbol?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         transaction.transactionId.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Date range filtering
+    let matchesDateRange = true;
+    if (dateRange !== 'all') {
+      const transactionDate = new Date(transaction.date);
+      const now = new Date();
+      const diffTime = Math.abs(now - transactionDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      switch (dateRange) {
+        case 'today':
+          matchesDateRange = diffDays === 0;
+          break;
+        case 'week':
+          matchesDateRange = diffDays <= 7;
+          break;
+        case 'month':
+          matchesDateRange = diffDays <= 30;
+          break;
+        default:
+          matchesDateRange = true;
+      }
+    }
+    
+    return matchesFilter && matchesSearch && matchesDateRange;
+  });
+
+  const sortedTransactions = [...filteredTransactions].sort((a, b) => {
+    let aValue, bValue;
+    
+    switch (sortBy) {
+      case 'date':
+        aValue = new Date(a.date);
+        bValue = new Date(b.date);
+        break;
+      case 'amount':
+        aValue = a.totalAmount || a.amount;
+        bValue = b.totalAmount || b.amount;
+        break;
+      case 'type':
+        aValue = a.type;
+        bValue = b.type;
+        break;
+      default:
+        aValue = new Date(a.date);
+        bValue = new Date(b.date);
+    }
+    
+    if (sortOrder === 'asc') {
+      return aValue > bValue ? 1 : -1;
+    } else {
+      return aValue < bValue ? 1 : -1;
+    }
+  });
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getTransactionIcon = (type) => {
+    switch (type) {
+      case 'BUY': return '💰';
+      case 'SELL': return '📉';
+      case 'DEPOSIT': return '💰';
+      case 'WITHDRAWAL': return '💸';
+      default: return '📊';
+    }
+  };
+
+  const getTransactionColor = (type) => {
+    switch (type) {
+      case 'BUY': return 'text-green-600';
+      case 'SELL': return 'text-red-600';
+      case 'DEPOSIT': return 'text-blue-600';
+      case 'WITHDRAWAL': return 'text-orange-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'COMPLETED': return 'bg-green-100 text-green-800';
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+      case 'FAILED': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleViewReceipt = (transaction) => {
+    console.log('View Receipt clicked for transaction:', transaction);
+    setSelectedTransaction(transaction);
+    setReceiptModalOpen(true);
+  };
+
+  const closeReceiptModal = () => {
+    setReceiptModalOpen(false);
+    setSelectedTransaction(null);
+  };
+
+  const getTransactionDescription = (transaction) => {
+    switch (transaction.type) {
+      case 'BUY':
+        return `Purchased ${transaction.quantity} shares of ${transaction.stockName} (${transaction.symbol})`;
+      case 'SELL':
+        return `Sold ${transaction.quantity} shares of ${transaction.stockName} (${transaction.symbol})`;
+      case 'DEPOSIT':
+        return `Added funds to trading account`;
+      case 'WITHDRAWAL':
+        return `Withdrew funds from trading account`;
+      default:
+        return transaction.type;
+    }
+  };
+
+  const getTransactionDetails = (transaction) => {
+    const details = [];
+    
+    if (transaction.stockName) {
+      details.push({ label: 'Stock Name', value: transaction.stockName });
+    }
+    if (transaction.symbol) {
+      details.push({ label: 'Symbol', value: transaction.symbol });
+    }
+    if (transaction.quantity) {
+      details.push({ label: 'Quantity', value: transaction.quantity });
+    }
+    if (transaction.price) {
+      details.push({ label: 'Price per Share', value: `₹${transaction.price.toFixed(2)}` });
+    }
+    
+    details.push(
+      { label: 'Total Amount', value: `₹${(transaction.totalAmount || transaction.amount).toFixed(2)}` },
+      { label: 'Transaction ID', value: transaction.transactionId },
+      { label: 'Date & Time', value: formatDate(transaction.date) },
+      { label: 'Status', value: transaction.status },
+      { label: 'Fees', value: `₹${transaction.fees.toFixed(2)}` },
+      { label: 'Exchange', value: transaction.exchange }
+    );
+    
+    return details;
+  };
+
+  const downloadReceipt = (transaction) => {
+    // Create receipt content
+    const receiptContent = `
+STOCK MARKET APP - TRANSACTION RECEIPT
+=====================================
+
+Transaction Type: ${transaction.type}
+${getTransactionDescription(transaction)}
+
+${getTransactionDetails(transaction).map(detail => `${detail.label}: ${detail.value}`).join('\n')}
+
+=====================================
+Total Amount: ₹${(transaction.totalAmount || transaction.amount).toFixed(2)}
+=====================================
+
+Generated on: ${new Date().toLocaleDateString('en-IN')}
+Thank you for using Stock Market App!
+    `.trim();
+
+    // Create blob and download
+    const blob = new Blob([receiptContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `receipt_${transaction.transactionId}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const downloadCSV = () => {
+    // CSV headers
+    const headers = [
+      'Transaction ID',
+      'Type',
+      'Stock Name',
+      'Symbol',
+      'Quantity',
+      'Price per Share',
+      'Total Amount',
+      'Fees',
+      'Exchange',
+      'Status',
+      'Date & Time'
+    ];
+
+    // CSV data rows
+    const csvData = sortedTransactions.map(transaction => [
+      transaction.transactionId,
+      transaction.type,
+      transaction.stockName || '',
+      transaction.symbol || '',
+      transaction.quantity || '',
+      transaction.price ? `₹${transaction.price.toFixed(2)}` : '',
+      `₹${(transaction.totalAmount || transaction.amount).toFixed(2)}`,
+      `₹${transaction.fees.toFixed(2)}`,
+      transaction.exchange || '',
+      transaction.status,
+      formatDate(transaction.date)
+    ]);
+
+    // Combine headers and data
+    const csvContent = [headers, ...csvData]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n');
+
+    // Create and download CSV file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `transactions_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const totalTransactions = sortedTransactions.length;
+  const totalAmount = sortedTransactions.reduce((sum, t) => sum + (t.totalAmount || t.amount), 0);
+  const totalFees = sortedTransactions.reduce((sum, t) => sum + t.fees, 0);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header title="Transaction History" />
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          {/* Page Header Skeleton */}
+          <div className="mb-8">
+            <div className="h-8 bg-gray-200 rounded animate-pulse w-64 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-96"></div>
+          </div>
+          
+          {/* Summary Cards Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                  <div className="flex-1">
+                    <div className="h-3 bg-gray-200 rounded w-20 mb-2"></div>
+                    <div className="h-6 bg-gray-200 rounded w-16"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Filters Skeleton */}
+          <div className="bg-white rounded-xl shadow-lg p-6 mb-8 animate-pulse">
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="flex-1">
+                <div className="h-12 bg-gray-200 rounded-lg"></div>
+              </div>
+              <div className="h-12 bg-gray-200 rounded-lg w-32"></div>
+              <div className="h-12 bg-gray-200 rounded-lg w-32"></div>
+            </div>
+          </div>
+          
+          {/* Table Skeleton */}
+          <SkeletonTable rows={8} columns={6} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header title="Transaction History" />
+      
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Transaction History</h1>
+          <p className="text-gray-600">Track all your trading and account activities</p>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
+                <FaHistory className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Total Transactions</p>
+                <p className="text-2xl font-bold text-gray-900">{totalTransactions}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                <FaFileAlt className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Total Amount</p>
+                <p className="text-2xl font-bold text-gray-900">₹{totalAmount.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center">
+                <FaEye className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Total Fees</p>
+                <p className="text-2xl font-bold text-gray-900">₹{totalFees.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+                <FaDownload className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Export Data</p>
+                <button onClick={downloadCSV} className="text-sm text-purple-600 hover:text-purple-700 font-medium">
+                  Download CSV
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters and Search */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search */}
+            <div className="flex-1 relative">
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search transactions by stock, symbol, or ID..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+              />
+            </div>
+
+            {/* Filter by Type */}
+            <div className="flex items-center gap-2">
+              <FaFilter className="text-gray-400" />
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+              >
+                <option value="all">All Types</option>
+                <option value="BUY">Buy</option>
+                <option value="SELL">Sell</option>
+                <option value="DEPOSIT">Deposit</option>
+                <option value="WITHDRAWAL">Withdrawal</option>
+              </select>
+            </div>
+
+            {/* Date Range */}
+            <select
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+            >
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+
+            {/* Sort */}
+            <select
+              value={`${sortBy}-${sortOrder}`}
+              onChange={(e) => {
+                const [field, order] = e.target.value.split('-');
+                setSortBy(field);
+                setSortOrder(order);
+              }}
+              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+            >
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="amount-desc">Amount High to Low</option>
+              <option value="amount-asc">Amount Low to High</option>
+              <option value="type-asc">Type A-Z</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Transactions List */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fees</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {sortedTransactions.map((transaction) => (
+                  <tr key={transaction.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{getTransactionIcon(transaction.type)}</span>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">{transaction.type}</p>
+                          <p className="text-xs text-gray-500">{transaction.transactionId}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {transaction.stockName || transaction.type}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {transaction.symbol && `${transaction.symbol} • ${transaction.quantity} shares`}
+                          {!transaction.symbol && transaction.exchange}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className={`text-sm font-semibold ${getTransactionColor(transaction.type)}`}>
+                        {transaction.type === 'BUY' || transaction.type === 'DEPOSIT' ? '+' : '-'}
+                        ₹{(transaction.totalAmount || transaction.amount).toLocaleString()}
+                      </p>
+                      {transaction.symbol && (
+                        <p className="text-xs text-gray-500">@ ₹{transaction.price}</p>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-gray-900">₹{transaction.fees.toFixed(2)}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(transaction.status)}`}>
+                        {transaction.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-gray-900">{formatDate(transaction.date)}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button 
+                        onClick={() => handleViewReceipt(transaction)}
+                        className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors duration-200 flex items-center gap-2 shadow-sm cursor-pointer"
+                        title="View Receipt"
+                      >
+                        <FaReceipt className="w-4 h-4" />
+                        Receipt
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {sortedTransactions.length === 0 && (
+            <div className="p-8 text-center">
+              <div className="text-6xl mb-4">📊</div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No transactions found</h3>
+              <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Receipt Modal */}
+      {receiptModalOpen && selectedTransaction && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" onClick={closeReceiptModal}>
+          <div className="bg-white rounded-none shadow-2xl max-w-sm w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Receipt Header */}
+            <div className="bg-gray-900 text-white p-4 text-center border-b-4 border-green-500">
+              <div className="flex justify-between items-start mb-2">
+                <button
+                  onClick={closeReceiptModal}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <FaTimes className="w-4 h-4" />
+                </button>
+                <div className="flex-1">
+                  <h1 className="text-lg font-bold tracking-wider">STOCK MARKET APP</h1>
+                  <p className="text-gray-300 text-xs mt-1">Trading Platform</p>
+                </div>
+                <div className="w-4"></div>
+              </div>
+              <div className="text-center">
+                <FaReceipt className="w-6 h-6 mx-auto mb-1 text-green-400" />
+                <h2 className="text-sm font-semibold text-green-400">TRANSACTION RECEIPT</h2>
+              </div>
+            </div>
+
+            {/* Receipt Body */}
+            <div className="p-4 bg-gray-50">
+              {/* Transaction Type Badge */}
+              <div className="text-center mb-3">
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold text-white ${
+                  selectedTransaction.type === 'BUY' ? 'bg-green-600' :
+                  selectedTransaction.type === 'SELL' ? 'bg-red-600' :
+                  selectedTransaction.type === 'DEPOSIT' ? 'bg-blue-600' :
+                  'bg-orange-600'
+                }`}>
+                  {selectedTransaction.type}
+                </span>
+                <p className="text-gray-600 text-xs mt-1">{getTransactionDescription(selectedTransaction)}</p>
+              </div>
+
+              {/* Receipt Details */}
+              <div className="bg-white rounded-lg border border-gray-200 p-3 mb-3">
+                <div className="space-y-2">
+                  {getTransactionDetails(selectedTransaction).map((detail, index) => (
+                    <div key={index} className="flex justify-between items-center py-1 border-b border-gray-100 last:border-b-0">
+                      <span className="text-gray-600 text-xs font-medium">{detail.label}</span>
+                      <span className="text-gray-900 text-xs font-semibold text-right">{detail.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Total Amount Section */}
+              <div className="bg-green-600 text-white p-3 rounded-lg text-center">
+                <p className="text-xs font-medium text-green-100 mb-1">TOTAL AMOUNT</p>
+                <p className="text-2xl font-bold">
+                  ₹{(selectedTransaction.totalAmount || selectedTransaction.amount).toFixed(2)}
+                </p>
+              </div>
+
+              {/* Receipt Footer */}
+              <div className="text-center mt-3 text-gray-500 text-xs">
+                <p>Thank you for using Stock Market App</p>
+                <p className="mt-1">Generated on {new Date().toLocaleDateString('en-IN')}</p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="bg-white p-3 border-t border-gray-200">
+              <div className="flex gap-2">
+                <button
+                  onClick={closeReceiptModal}
+                  className="flex-1 px-3 py-2 text-gray-600 hover:text-gray-800 font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                >
+                  Close
+                </button>
+                <button 
+                  onClick={() => downloadReceipt(selectedTransaction)}
+                  className="flex-1 px-3 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 text-sm"
+                >
+                  <FaDownload className="w-3 h-3" />
+                  Download
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Footer spacing */}
+      <div className="mt-16 mb-8"></div>
+      
+      <Footer />
+    </div>
+  );
+};
+
+export default TransactionHistoryPage; 

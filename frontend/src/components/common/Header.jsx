@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { FaUser, FaSignOutAlt, FaShoppingCart, FaEye, FaWallet, FaHistory } from 'react-icons/fa';
 import LoginModal from '../auth/LoginModal';
+import { useAuth } from '../../context/AuthContext';
 
 const Header = ({ title, showBack = false, onBack }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
 
   const handleLogoClick = () => {
     navigate('/');
@@ -22,6 +27,12 @@ const Header = ({ title, showBack = false, onBack }) => {
       case 'ipos':
         navigate('/ipos');
         break;
+      case 'investments':
+        navigate('/investments');
+        break;
+      case 'watchlist':
+        navigate('/watchlist');
+        break;
       default:
         break;
     }
@@ -32,10 +43,45 @@ const Header = ({ title, showBack = false, onBack }) => {
     if (path === '/stocks') return 'stocks';
     if (path === '/mutual-funds') return 'mutual-funds';
     if (path === '/ipos') return 'ipos';
+    if (path === '/investments') return 'investments';
+    if (path === '/watchlist') return 'watchlist';
     return 'dashboard';
   };
 
   const activeRoute = getActiveRoute();
+
+  const handleLogout = () => {
+    logout();
+    setShowUserMenu(false);
+    navigate('/');
+  };
+
+  const getUserInitial = () => {
+    if (user && user.firstName) {
+      return user.firstName.charAt(0).toUpperCase();
+    }
+    if (user && user.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
 
   return (
     <div className="bg-white shadow-md px-8 py-4 flex justify-between items-center sticky top-0 z-50">
@@ -64,8 +110,8 @@ const Header = ({ title, showBack = false, onBack }) => {
           >
             Stocks
           </span>
-          <span 
-            className={`text-bold tracking-wider text-sm font-medium cursor-pointer transition-colors ${
+          {/* <span 
+            className={`tracking-wider text-sm font-medium cursor-pointer transition-colors ${
               activeRoute === 'mutual-funds' ? 'text-gray-600' : 'text-gray-400'
             } hover:text-gray-600`}
             style={{fontWeight: 'bold' }}
@@ -74,25 +120,109 @@ const Header = ({ title, showBack = false, onBack }) => {
             Mutual Funds
           </span>
           <span 
-            className={`text-bold tracking-wider text-sm font-medium cursor-pointer transition-colors ${
+            className={`tracking-wider text-sm font-medium cursor-pointer transition-colors ${
               activeRoute === 'ipos' ? 'text-gray-600' : 'text-gray-400'
             } hover:text-gray-600`}
             style={{fontWeight: 'bold' }}
             onClick={() => handleNavClick('ipos')}
           >
             IPOs
-          </span>
+          </span> */}
+
         </div>
       </div>
       
       <div className="flex items-center gap-6">
-        {/* Login/Sign up Button */}
-        <button 
-          onClick={() => setIsLoginModalOpen(true)}
-          className="bg-gradient-to-r from-teal-500 to-green-500 text-white px-6 py-2 rounded-lg font-medium hover:from-teal-600 hover:to-green-600 transition-all duration-200"
-        >
-          Login/Sign up
-        </button>
+        {/* Watchlist Button - Only show when authenticated */}
+        {isAuthenticated && (
+          <button
+            onClick={() => handleNavClick('watchlist')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+              activeRoute === 'watchlist' 
+                ? 'bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-md' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
+            }`}
+          >
+            <FaEye className="w-4 h-4" />
+            <span className="hidden sm:inline">Watchlist</span>
+          </button>
+        )}
+
+        {/* Investments Button - Only show when authenticated */}
+        {isAuthenticated && (
+          <button
+            onClick={() => handleNavClick('investments')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+              activeRoute === 'investments' 
+                ? 'bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-md' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
+            }`}
+          >
+            <FaShoppingCart className="w-4 h-4" />
+            <span className="hidden sm:inline">Investments</span>
+          </button>
+        )}
+
+        {/* Account Balance Button - Only show when authenticated */}
+        {isAuthenticated && (
+          <button
+            onClick={() => navigate('/balance')}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm transition-all duration-200"
+          >
+            <FaWallet className="w-4 h-4" />
+            <span className="hidden sm:inline">Balance</span>
+          </button>
+        )}
+
+        {/* Transaction History Button - Only show when authenticated */}
+        {isAuthenticated && (
+          <button
+            onClick={() => navigate('/transactions')}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm transition-all duration-200"
+          >
+            <FaHistory className="w-4 h-4" />
+            <span className="hidden sm:inline">History</span>
+          </button>
+        )}
+        
+        {isAuthenticated ? (
+          /* User Avatar and Menu */
+          <div className="relative" ref={userMenuRef}>
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-500 to-green-500 text-white font-bold text-lg flex items-center justify-center hover:from-teal-600 hover:to-green-600 transition-all duration-200 cursor-pointer"
+            >
+              {getUserInitial()}
+            </button>
+            
+            {/* User Dropdown Menu */}
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-900">
+                    {user?.firstName || user?.email}
+                  </p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                >
+                  <FaSignOutAlt className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Login/Sign up Button */
+          <button 
+            onClick={() => setIsLoginModalOpen(true)}
+            className="bg-gradient-to-r from-teal-500 to-green-500 text-white px-6 py-2 rounded-lg font-medium hover:from-teal-600 hover:to-green-600 transition-all duration-200"
+          >
+            Login/Sign up
+          </button>
+        )}
       </div>
 
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />

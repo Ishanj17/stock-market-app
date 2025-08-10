@@ -4,6 +4,7 @@ import Header from '../common/Header';
 import NewsCards from './NewsCards';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorMessage from '../common/ErrorMessage';
+import { SkeletonDashboardCard, SkeletonNewsCard, SkeletonList } from '../common/SkeletonLoader';
 import axios from 'axios';
 import MainHero from '../common/MainHero';
 import DivideLine from '../common/DivideLine';
@@ -27,8 +28,19 @@ const Dashboard = () => {
       const API_BASE_URL = process.env.REACT_APP_API_URL;
       // news
       const fetchNews = async () => {
-        const res = await axios.get(`${API_BASE_URL}/api/news`);
-        return res.data;
+        setLoading(true);
+        try {
+          // MOCK API - Replace with real API call
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
+          
+          const res = await axios.get(`${API_BASE_URL}/api/news`);
+          setNews(res.data);
+        } catch (error) {
+          console.error('Error fetching news:', error);
+          setError('Failed to fetch news');
+        } finally {
+          setLoading(false);
+        }
       };
       const newsData = await fetchNews();
       if(Array.isArray(newsData)) {
@@ -60,7 +72,39 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <MainHero />
+        <DivideLine />
+        
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          {/* Investment Options Skeleton */}
+          <div className="mb-12">
+            <div className="h-8 bg-gray-200 rounded animate-pulse w-64 mb-6"></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <SkeletonDashboardCard key={index} />
+              ))}
+            </div>
+          </div>
+          
+          {/* News Section Skeleton */}
+          <div className="mb-12">
+            <div className="h-8 bg-gray-200 rounded animate-pulse w-48 mb-6"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <SkeletonNewsCard key={index} />
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        <Footer />
+      </div>
+    );
+  }
   if (error) return <ErrorMessage message={error} onRetry={fetchDashboardData} />;
 
   return (
@@ -73,6 +117,10 @@ const Dashboard = () => {
       {news.length > 0 && (
         <NewsCards news={news} />
       )}
+      
+      {/* Footer spacing */}
+      <div className="mt-16 mb-8"></div>
+      
       <Footer />
     </div>
   );

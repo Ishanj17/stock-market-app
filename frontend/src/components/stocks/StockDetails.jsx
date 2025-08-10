@@ -1,42 +1,107 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../common/Header';
-import LoadingSpinner from '../common/LoadingSpinner';
+import { SkeletonCard, SkeletonChart } from '../common/SkeletonLoader';
+import BuyStockModal from './BuyStockModal';
+import Footer from '../common/Footer';
+import { useAuth } from '../../context/AuthContext';
+import { FaShoppingCart, FaEye, FaEyeSlash } from 'react-icons/fa';
 import axios from 'axios';
 import './stocks.css';
 
 const StockDetails = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   let { name } = useParams();
-  // name = name.split(' ')[0];
   
   const [loading, setLoading] = useState(true);
   const [stock, setStock] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const [watchlistLoading, setWatchlistLoading] = useState(false);
 
   useEffect(() => {
-    const fetchStockDetails = async () => {
+    const fetchStockData = async () => {
       setLoading(true);
       try {
         const API_BASE_URL = process.env.REACT_APP_API_URL;
+        // MOCK API - Replace with real API call
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
+        
         const res = await axios.get(`${API_BASE_URL}/api/stocks/detail?name=${name}`);
-        const stockData = res.data;
-
-        if (stockData) {
-          setStock(stockData);
-        } else {
-          setError('Stock not found');
-        }
-      } catch (err) {
-        setError('Failed to load stock details');
+        setStock(res.data);
+        // Check if stock is in watchlist
+        checkWatchlistStatus(res.data.name);
+      } catch (error) {
+        console.error('Error fetching stock data:', error);
+        setError('Failed to fetch stock data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStockDetails();
+    fetchStockData();
   }, [name]);
+
+  const checkWatchlistStatus = async (stockName) => {
+    if (!isAuthenticated) return;
+    
+    try {
+      // Mock API call to check if stock is in watchlist
+      setTimeout(() => {
+        // Mock response - in real app, this would be an API call
+        const mockWatchlist = ['AAPL', 'TSLA', 'MSFT', 'GOOGL'];
+        setIsInWatchlist(mockWatchlist.includes(stockName));
+      }, 500);
+    } catch (error) {
+      console.error('Error checking watchlist status:', error);
+    }
+  };
+
+  const handleAddToWatchlist = async () => {
+    if (!isAuthenticated) {
+      alert('Please login to add stocks to watchlist');
+      return;
+    }
+
+    setWatchlistLoading(true);
+    try {
+      // MOCK API - Replace with real API call
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+      
+      // Simulate API call
+      setTimeout(() => {
+        setIsInWatchlist(true);
+        setWatchlistLoading(false);
+        alert(`${stock.name} added to watchlist!`);
+      }, 1000);
+    } catch (error) {
+      console.error('Error adding to watchlist:', error);
+      alert('Failed to add to watchlist. Please try again.');
+      setWatchlistLoading(false);
+    }
+  };
+
+  const handleRemoveFromWatchlist = async () => {
+    setWatchlistLoading(true);
+    try {
+      // MOCK API - Replace with real API call
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
+      
+      // Simulate API call
+      setTimeout(() => {
+        setIsInWatchlist(false);
+        setWatchlistLoading(false);
+        alert(`${stock.name} removed from watchlist!`);
+      }, 1000);
+    } catch (error) {
+      console.error('Error removing from watchlist:', error);
+      alert('Failed to remove from watchlist. Please try again.');
+      setWatchlistLoading(false);
+    }
+  };
 
   const handleBack = () => {
     navigate('/stocks');
@@ -69,9 +134,82 @@ const StockDetails = () => {
     { id: 'news', label: 'Recent News' }
   ];
 
-  if (loading) return <LoadingSpinner />;
-  if (error) return <div className="text-center text-red-500 p-8">{error}</div>;
-  if (!stock) return <div className="text-center text-gray-500 p-8">Stock not found</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header title="Stock Details" showBack={true} onBack={handleBack} />
+        
+        <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-6">
+          {/* Stock Header Skeleton */}
+          <div className="bg-white rounded-lg p-6 mb-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex-1">
+                <div className="h-8 bg-gray-200 rounded animate-pulse w-64 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-48 mb-4"></div>
+                <div className="flex flex-wrap gap-4">
+                  <div className="h-8 bg-gray-200 rounded animate-pulse w-32"></div>
+                  <div className="h-5 bg-gray-200 rounded animate-pulse w-40"></div>
+                </div>
+              </div>
+              <div className="mt-4 lg:mt-0 flex items-center gap-4">
+                <div className="h-12 bg-gray-200 rounded-lg animate-pulse w-32"></div>
+                <div className="h-12 bg-gray-200 rounded-lg animate-pulse w-48"></div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-20 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tab Navigation Skeleton */}
+          <div className="rounded-lg shadow-md border border-gray-200 mb-6">
+            <div className="border-b border-gray-200">
+              <nav className="flex space-x-8 px-6">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={index} className="h-12 bg-gray-200 rounded animate-pulse w-24"></div>
+                ))}
+              </nav>
+            </div>
+          </div>
+
+          {/* Content Skeleton */}
+          <div className="space-y-6">
+            <SkeletonCard />
+            <SkeletonChart height="h-96" />
+            <SkeletonCard />
+          </div>
+        </div>
+        
+        {/* Footer spacing */}
+        <div className="mt-16 mb-8"></div>
+        
+        <Footer />
+      </div>
+    );
+  }
+  if (error) return (
+    <div className="min-h-screen bg-gray-50">
+      <Header title="Stock Details" showBack={true} onBack={handleBack} />
+      <div className="text-center text-red-500 p-8">{error}</div>
+      
+      {/* Footer spacing */}
+      <div className="mt-16 mb-8"></div>
+      
+      <Footer />
+    </div>
+  );
+  if (!stock) return (
+    <div className="min-h-screen bg-gray-50">
+      <Header title="Stock Details" showBack={true} onBack={handleBack} />
+      <div className="text-center text-gray-500 p-8">Stock not found</div>
+      
+      {/* Footer spacing */}
+      <div className="mt-16 mb-8"></div>
+      
+      <Footer />
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -100,7 +238,40 @@ const StockDetails = () => {
                 </div>
               </div>
             </div>
-            <div className="mt-4 lg:mt-0">
+            <div className="mt-4 lg:mt-0 flex items-center gap-4">
+              {/* Buy Stock Button - Only show when authenticated */}
+              {isAuthenticated && (
+                <button
+                  onClick={() => setIsBuyModalOpen(true)}
+                  className="bg-gradient-to-r from-teal-500 to-green-500 text-white px-6 py-3 rounded-lg font-medium hover:from-teal-600 hover:to-green-600 transition-all duration-200 flex items-center gap-2 shadow-md"
+                >
+                  <FaShoppingCart className="w-4 h-4" />
+                  Buy Stock
+                </button>
+              )}
+              
+              {/* Add/Remove from Watchlist Button */}
+              {isAuthenticated && (
+                <button
+                  onClick={isInWatchlist ? handleRemoveFromWatchlist : handleAddToWatchlist}
+                  disabled={watchlistLoading}
+                  className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
+                    isInWatchlist 
+                      ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  } ${watchlistLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {watchlistLoading ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                  ) : isInWatchlist ? (
+                    <FaEyeSlash className="w-4 h-4" />
+                  ) : (
+                    <FaEye className="w-4 h-4" />
+                  )}
+                  {isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                </button>
+              )}
+              
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="hero-subheading">Risk Level</div>
                 <div className="font-semibold text-gray-500">{stock.risk}</div>
@@ -297,6 +468,18 @@ const StockDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Buy Stock Modal */}
+      <BuyStockModal 
+        isOpen={isBuyModalOpen} 
+        onClose={() => setIsBuyModalOpen(false)} 
+        stock={stock} 
+      />
+      
+      {/* Footer spacing */}
+      <div className="mt-16 mb-8"></div>
+      
+      <Footer />
     </div>
   );
 };

@@ -1,10 +1,14 @@
 // frontend/src/components/auth/AuthModal.jsx
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Modal from '../common/Modal';
 import { FaGoogle, FaTimes, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
 import './auth.css';
 
 const AuthModal = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [step, setStep] = useState('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,10 +45,18 @@ const AuthModal = ({ isOpen, onClose }) => {
     if (email && email.includes('@')) {
       setLoading(true);
       try {
-        const userExists = await checkUserExists(email);
-        setStep(userExists ? 'password' : 'signup');
+        // MOCK API - Replace with real API call
+        const apiUrl = process.env.REACT_APP_API_URL;
+        const response = await fetch(`${apiUrl}/api/user/email-verification`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ "email": email }),
+        });
+        const data = await response.json();
+        setStep(data.exists ? 'password' : 'signup');
       } catch (error) {
         console.error('Error checking user:', error);
+        alert('Error checking email. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -52,34 +64,97 @@ const AuthModal = ({ isOpen, onClose }) => {
   };
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      alert('Please enter both email and password');
+      return;
+    }
+    
     setLoading(true);
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const response = await fetch(`${apiUrl}/api/user/login`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ "email": email, "password": password }),
-    })
-    const data = await response.json();
+    try {
+      // MOCK API - Replace with real API call
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/api/user/login`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ "email": email, "password": password }),
+      });
+      const data = await response.json();
+      
+      if (data.success && data.token) {
+        // Store user data and token
+        const userData = {
+          email: email,
+          firstName: data.first_name || email.split('@')[0], // Fallback to email prefix if no first_name
+        };
+        login(userData, data.token);
+        
+        // Close modal and redirect to dashboard
+        onClose();
+        navigate('/');
+      } else {
+        // Handle login error
+        console.error('Login failed:', data.message || 'Login failed');
+        alert(data.message || 'Login failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignUp = async () => {
-    if (password !== confirmPassword) {
-      // Handle password mismatch
+    if (!name.trim() || !email || !password || !confirmPassword) {
+      alert('Please fill in all fields');
       return;
     }
+    
+    if (password !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+    
     setLoading(true);
-    const apiUrl = process.env.REACT_APP_API_URL;
-    const response = await fetch(`${apiUrl}/api/user/sign-up`, {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ "email": email, "password": password, "first_name": name }),
-    })
-    const data = await response.json();
-    console.log(data, 'data');
-    setLoading(false)
+    try {
+      // MOCK API - Replace with real API call
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const response = await fetch(`${apiUrl}/api/user/signup`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ 
+          "email": email, 
+          "password": password,
+          "first_name": name
+        }),
+      });
+      const data = await response.json();
+      
+      if (data.success && data.token) {
+        // Store user data and token
+        const userData = {
+          email: email,
+          firstName: name,
+        };
+        login(userData, data.token);
+        
+        // Close modal and redirect to dashboard
+        onClose();
+        navigate('/');
+      } else {
+        // Handle signup error
+        console.error('Signup failed:', data.message || 'Signup failed');
+        alert(data.message || 'Signup failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      alert('Error creating account. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleAuth = () => {
+    // TODO: Implement Google OAuth
     console.log('Google auth clicked');
   };
 
@@ -89,8 +164,6 @@ const AuthModal = ({ isOpen, onClose }) => {
     setConfirmPassword('');
     setName('');
     setStep('email');
-    setShowPassword(false);
-    setShowConfirmPassword(false);
   };
 
   const handleClose = () => {
@@ -118,19 +191,23 @@ const AuthModal = ({ isOpen, onClose }) => {
           
           {/* Content */}
           <div className="relative z-10 h-full flex flex-col justify-center items-center text-white px-8">
-            <h1 className="text-4xl font-bold mb-4 text-center">
-              Simple, Free Investing.
+            <div className="text-6xl mb-4">📈</div>
+            <h1 className="text-3xl font-bold mb-4 text-center">
+              Welcome to Crash
             </h1>
             <div className="w-16 h-0.5 bg-white mb-4"></div>
-            
-            <h2 className="text-3xl font-bold transition-opacity duration-500 ease-in-out">
-              {options[currentIndex]}
-            </h2>
+            <p className="text-lg text-center">
+              Your gateway to smart investing
+            </p>
+            <div className="mt-8 text-center">
+              <p className="text-sm opacity-90">Invest in</p>
+              <p className="text-xl font-semibold">{options[currentIndex]}</p>
+            </div>
           </div>
         </div>
 
         {/* Right Panel - White Background */}
-        <div className="w-1/2 bg-white p-8 flex flex-col justify-center">
+        <div className="w-1/2 bg-white p-8 flex flex-col justify-center relative">
           {/* Close Button */}
           <button
             onClick={handleClose}
@@ -146,8 +223,33 @@ const AuthModal = ({ isOpen, onClose }) => {
               Welcome to Crash
             </h2>
 
+            {/* Loading State */}
+            {loading && (
+              <div className="space-y-6 animate-pulse">
+                {/* Email Input Skeleton */}
+                <div>
+                  <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                  <div className="h-12 bg-gray-200 rounded-lg w-full"></div>
+                </div>
+                
+                {/* Button Skeleton */}
+                <div className="h-12 bg-gray-200 rounded-lg w-full"></div>
+                
+                {/* Additional Input Skeleton (for password/signup steps) */}
+                {step !== 'email' && (
+                  <>
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                      <div className="h-12 bg-gray-200 rounded-lg w-full"></div>
+                    </div>
+                    <div className="h-12 bg-gray-200 rounded-lg w-full"></div>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Email Step */}
-            {step === 'email' && (
+            {!loading && step === 'email' && (
               <div>
                 {/* Google Auth Button */}
                 {/* <button
@@ -206,7 +308,7 @@ const AuthModal = ({ isOpen, onClose }) => {
             )}
 
             {/* Password Step (for existing users) */}
-            {step === 'password' && (
+            {!loading && step === 'password' && (
               <div>
                 {/* Show Email (Non-editable) */}
                 <div className="mb-6">
@@ -282,7 +384,7 @@ const AuthModal = ({ isOpen, onClose }) => {
             )}
 
             {/* Signup Step (for new users) */}
-            {step === 'signup' && (
+            {!loading && step === 'signup' && (
               <div>
                 {/* Show Email (Non-editable) */}
                 <div className="mb-4">
@@ -413,7 +515,7 @@ const AuthModal = ({ isOpen, onClose }) => {
             )}
 
             {/* Footer - Only show on email step */}
-            {step === 'email' && (
+            {!loading && step === 'email' && (
               <div className="mt-8 text-center text-xs text-gray-500">
                 By proceeding, I agree to{' '}
                 <a href="#" className="text-green-600 underline">T&C</a>,{' '}

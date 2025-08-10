@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
-import LoadingSpinner from '../common/LoadingSpinner';
+import { SkeletonTable } from '../common/SkeletonLoader';
 import axios from 'axios';
 import Footer from '../common/Footer';
 
@@ -35,7 +35,11 @@ const MutualFundScreen = () => {
     const API_BASE_URL = process.env.REACT_APP_API_URL;
   
     const fetchMutualFunds = async () => {
+      setLoading(true);
       try {
+        // MOCK API - Replace with real API call
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
+        
         const res = await axios.get(`${API_BASE_URL}/api/mutualfunds`);
         const data = res.data;
   
@@ -50,6 +54,7 @@ const MutualFundScreen = () => {
         });
       } catch (error) {
         console.error('Error fetching mutual funds:', error);
+        setError('Failed to fetch mutual funds');
       } finally {
         setLoading(false);
       }
@@ -105,7 +110,32 @@ const MutualFundScreen = () => {
     return numValue >= 0 ? 'text-green-600' : 'text-red-600';
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header title="Mutual Funds" showBack={true} onBack={handleBack} />
+        
+        {/* Header Section Skeleton */}
+        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="h-6 bg-gray-200 rounded animate-pulse w-32 mb-3"></div>
+            
+            {/* Navigation Buttons Skeleton */}
+            <div className="flex flex-wrap gap-3 mt-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="h-8 bg-gray-200 rounded-full animate-pulse w-24"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Table Skeleton */}
+        <div className="mb-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <SkeletonTable rows={8} columns={4} />
+        </div>
+      </div>
+    );
+  }
   if (error) return <div className="text-center text-red-500 p-8">{error}</div>;
 
   return (
@@ -209,6 +239,10 @@ const MutualFundScreen = () => {
           )}
         </div>
       </div>
+      
+      {/* Footer spacing */}
+      <div className="mt-16 mb-8"></div>
+      
       <Footer />
     </div>
   );

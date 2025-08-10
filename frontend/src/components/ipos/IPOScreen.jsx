@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../common/Header';
 import LoadingSpinner from '../common/LoadingSpinner';
+import { SkeletonCard, SkeletonList } from '../common/SkeletonLoader';
+import Footer from '../common/Footer';
 import axios from 'axios';
 
 const IPOScreen = () => {
@@ -26,6 +28,9 @@ const IPOScreen = () => {
     setLoading(true);
     const fetchIpos = async () => {
       try {
+        // MOCK API - Replace with real API call
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
+        
         const res = await axios.get(`${API_BASE_URL}/api/ipos`);
         const data = res.data;
         setIposData({
@@ -213,7 +218,38 @@ const IPOScreen = () => {
     </div>
   );
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header title="IPOs" />
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="mb-8">
+            <div className="h-8 bg-gray-200 rounded animate-pulse w-32 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-64"></div>
+          </div>
+          
+          {/* Tabs Skeleton */}
+          <div className="flex space-x-1 mb-6">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="h-10 bg-gray-200 rounded-lg animate-pulse w-24"></div>
+            ))}
+          </div>
+          
+          {/* IPO Cards Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <SkeletonCard key={index} />
+            ))}
+          </div>
+        </div>
+        
+        {/* Footer spacing */}
+        <div className="mt-16 mb-8"></div>
+        
+        <Footer />
+      </div>
+    );
+  }
   if (error) return <div className="text-center text-red-500 p-8">{error}</div>;
 
   return (
@@ -252,6 +288,11 @@ const IPOScreen = () => {
         {activeTab === 'active' && renderActiveTable()}
         {activeTab === 'closed' && renderClosedTable()}
       </div>
+      
+      {/* Footer spacing */}
+      <div className="mt-16 mb-8"></div>
+      
+      <Footer />
     </div>
   );
 };
