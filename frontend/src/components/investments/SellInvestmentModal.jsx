@@ -1,88 +1,35 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Modal from '../common/Modal';
-import { FaTimes, FaShoppingCart } from 'react-icons/fa';
-import { useAuth } from '../../context/AuthContext';
-import { SkeletonCard, SkeletonText } from '../common/SkeletonLoader';
+import React from "react";
+import { FaTimes, FaChartLine } from "react-icons/fa";
+import Modal from "../common/Modal";
 
-const BuyStockModal = ({ isOpen, onClose, stock }) => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [quantity, setQuantity] = useState(1);
-  const [loading, setLoading] = useState(false);
+export default function SellInvestmentModal({
+  isOpen,
+  onClose,
+  investment,
+  sellQuantity,
+  setSellQuantity,
+  onConfirm,
+  loading,
+}) {
+  if (!isOpen || !investment) return null;
 
-  if (!stock) return null;
-
-  const currentPrice = stock.price?.NSE || stock.price?.BSE || stock.price;
-  const totalAmount = currentPrice * quantity;
-
-  const handleBuyStock = async () => {
-    setLoading(true);
-    try {
-      // MOCK API - Replace with real API call
-      const apiUrl = process.env.REACT_APP_API_URL;
-      
-      // For now, simulate a successful purchase since this is a mock implementation
-      // In real implementation, you would make the actual API call
-      setTimeout(() => {
-        // Close modal and navigate to investments page
-        onClose();
-        // navigate('/investments');
-      }, 1000); // Simulate processing time
-      
-      // TODO: Uncomment this when real API is available
-      /*
-      const response = await fetch(`${apiUrl}/api/investments/buy-stock`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        body: JSON.stringify({
-          stockSymbol: stock.name,
-          stockName: stock.name,
-          quantity: quantity,
-          pricePerShare: currentPrice,
-          totalAmount: totalAmount
-        }),
-      });
-
-      if (response.ok) {
-        // Close modal and navigate to investments page
-        onClose();
-        navigate('/investments');
-      } else {
-        alert('Failed to buy stock. Please try again.');
-      }
-      */
-    } catch (error) {
-      console.error('Error buying stock:', error);
-      alert('Error buying stock. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleClose = () => {
-    setQuantity(1);
-    onClose();
-  };
+  const estimatedProceeds = sellQuantity * investment.currentPrice;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose}>
+    <Modal isOpen={isOpen} onClose={onClose}>
       <div className="flex h-[500px] max-h-[90vh] rounded-xl overflow-hidden relative">
         {/* Close Button - Top Right */}
         <button
-          onClick={handleClose}
+          onClick={onClose}
           className="absolute top-2 right-2 z-20 w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200"
         >
           <FaTimes className="w-3 h-3 text-gray-400" />
         </button>
 
-        {/* Left Panel - Green Background */}
+        {/* Left Panel - Red/Orange Background for Selling */}
         <div className="w-1/2 relative overflow-hidden"
             style={{
-              backgroundColor: '#00D09C',
+              backgroundColor: '#FF6B6B',
             }}
         >
           {/* Topographic pattern overlay */}
@@ -96,13 +43,13 @@ const BuyStockModal = ({ isOpen, onClose, stock }) => {
           
           {/* Content */}
           <div className="relative z-10 h-full flex flex-col justify-center items-center text-white px-8">
-            <div className="text-6xl mb-4">📈</div>
+            <div className="text-6xl mb-4">📉</div>
             <h1 className="text-3xl font-bold mb-4 text-center">
-              Invest in {stock.name}
+              Sell {investment.name}
             </h1>
             <div className="w-16 h-0.5 bg-white mb-4"></div>
             <p className="text-lg text-center">
-              Build your portfolio with this promising stock
+              Realize your gains and manage your portfolio
             </p>
           </div>
         </div>
@@ -112,12 +59,12 @@ const BuyStockModal = ({ isOpen, onClose, stock }) => {
           <div className="max-w-sm mx-auto w-full">
             {/* Title */}
             <h2 className="hero-heading font-bold text-center mt-6">
-              Confirm Purchase
+              Confirm Sale
             </h2>
 
             {loading ? (
               <div className="space-y-6 animate-pulse">
-                {/* Stock Details Skeleton */}
+                {/* Investment Details Skeleton */}
                 <div className="bg-gray-50 rounded-lg p-4 mb-6">
                   {Array.from({ length: 4 }).map((_, index) => (
                     <div key={index} className="flex items-center justify-between mb-2 last:mb-0">
@@ -137,8 +84,8 @@ const BuyStockModal = ({ isOpen, onClose, stock }) => {
                   </div>
                 </div>
 
-                {/* Total Amount Skeleton */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                {/* Estimated Proceeds Skeleton */}
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                   <div className="flex items-center justify-between">
                     <div className="h-3 bg-gray-200 rounded w-24"></div>
                     <div className="h-5 bg-gray-200 rounded w-20"></div>
@@ -156,87 +103,102 @@ const BuyStockModal = ({ isOpen, onClose, stock }) => {
               </div>
             ) : (
               <>
-                {/* Stock Details */}
+                {/* Investment Details */}
                 <div className="bg-gray-50 rounded-lg p-4 mb-4">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-semibold text-gray-500">Stock:</span>
-                    <span className="font-semibold text-gray-600">{stock.name}</span>
+                    <span className="font-semibold text-gray-600">{investment.name}</span>
+                  </div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold text-gray-500">Symbol:</span>
+                    <span className="font-semibold text-gray-600">{investment.symbol}</span>
                   </div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-semibold text-gray-500">Current Price:</span>
-                    <span className="font-semibold text-gray-600">₹{currentPrice}</span>
+                    <span className="font-semibold text-gray-600">₹{investment.currentPrice.toFixed(2)}</span>
                   </div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-gray-500">Industry:</span>
-                    <span className="font-semibold text-gray-600">{stock.industry}</span>
+                    <span className="text-sm font-semibold text-gray-500">Available:</span>
+                    <span className="font-semibold text-gray-600">{investment.quantity} units</span>
                   </div>
                 </div>
 
-                {/* Quantity Input */}
+                {/* Sell Quantity Input */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2"
-                    style={{ color: '#00D09C' }}
+                    style={{ color: '#FF6B6B' }}
                   >
-                    Number of Shares
+                    Quantity to Sell
                   </label>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      onClick={() => setSellQuantity(Math.max(1, sellQuantity - 1))}
                       className="w-8 h-8 rounded-lg border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50"
                     >
                       -
                     </button>
                     <input
                       type="number"
-                      value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-300"
+                      value={sellQuantity}
+                      onChange={(e) =>
+                        setSellQuantity(
+                          Math.min(
+                            parseInt(e.target.value) || 1,
+                            investment.quantity
+                          )
+                        )
+                      }
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-red-300 focus:border-red-300"
                       min="1"
+                      max={investment.quantity}
                     />
                     <button
-                      onClick={() => setQuantity(quantity + 1)}
+                      onClick={() => setSellQuantity(Math.min(sellQuantity + 1, investment.quantity))}
                       className="w-8 h-8 rounded-lg border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50"
                     >
                       +
                     </button>
                   </div>
+                  <p className="text-xs text-gray-500 mt-1 text-center">
+                    Max: {investment.quantity} units
+                  </p>
                 </div>
 
-                {/* Total Amount */}
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-5">
+                {/* Estimated Proceeds */}
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-5">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-gray-500">Total Amount</span>
-                    <span className="text-lg font-bold text-green-600">₹{totalAmount.toFixed(4)}</span>
+                    <span className="text-sm font-semibold text-gray-500">Estimated Proceeds</span>
+                    <span className="text-lg font-bold text-red-600">₹{estimatedProceeds.toFixed(2)}</span>
                   </div>
                 </div>
 
-                {/* Buy Button */}
+                {/* Sell Button */}
                 <button
-                  onClick={handleBuyStock}
+                  onClick={onConfirm}
                   disabled={loading}
                   style={{
-                    backgroundColor: '#00D09C',
+                    backgroundColor: '#FF6B6B',
                   }}
                   className="w-full px-4 py-3 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Processing Purchase...
+                      Processing Sale...
                     </>
                   ) : (
                     <>
-                      <FaShoppingCart className="w-4 h-4" />
-                      Buy {quantity} Share{quantity > 1 ? 's' : ''}
+                      <FaChartLine className="w-4 h-4" />
+                      Sell {sellQuantity} Unit{sellQuantity > 1 ? 's' : ''}
                     </>
                   )}
                 </button>
 
                 {/* Disclaimer */}
-                <div className="mt-4 text-gray-500 text-center" style={{fontSize: '8px'}}>
+                <div className="mt-1 mb-4 text-gray-500 text-center" style={{fontSize: '8px'}}>
                   By proceeding, you agree to our{' '}
-                  <a href="#" className="text-green-600 underline">Terms of Service</a>{' '}
-                  and acknowledge that stock investments carry risk.
+                  <a href="#" className="text-red-600 underline">Terms of Service</a>{' '}
+                  and acknowledge that selling investments may have tax implications.
                 </div>
               </>
             )}
@@ -245,6 +207,4 @@ const BuyStockModal = ({ isOpen, onClose, stock }) => {
       </div>
     </Modal>
   );
-};
-
-export default BuyStockModal; 
+}

@@ -41,23 +41,12 @@ const StockScreen = () => {
     }
   ];
 
-  // Different mock data for each category
-  const mockDataByCategory = {
-    trending: [],
-    price_shockers: [],
-    BSE_most_active: [],
-    NSE_most_active: []
-  };
-
   const fetchStocksData = async (tabType) => {
     setLoading(true);
     setError(null);
     
     try {
       const API_BASE_URL = process.env.REACT_APP_API_URL;
-      
-      // MOCK API - Replace with real API calls
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
       
       let response;
       switch (tabType) {
@@ -76,10 +65,6 @@ const StockScreen = () => {
         default:
           response = await axios.get(`${API_BASE_URL}/api/stocks/trending`);
       }
-      
-      // Log the response to see its structure
-      console.log('API Response:', response);
-      console.log('Response data:', response.data);
       
       // Handle different possible response structures
       let stocksArray = [];
@@ -151,13 +136,17 @@ const StockScreen = () => {
     fetchStocksData(activeTab);
   }, [activeTab]);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
   };
 
   const handleStockClick = (stock) => {
     // Navigate to stock details page using the most appropriate identifier
-    const stockIdentifier = stock.ticker || stock.nseCode || stock.ric || stock.company_name || stock.displayName || stock.name;
+    const stockIdentifier = stock.company_name || stock.displayName || stock.company;
     navigate(`/stocks/detail/${stockIdentifier}`);
   };
 
@@ -230,29 +219,30 @@ const StockScreen = () => {
           {/* Table Skeleton */}
           <SkeletonTable rows={10} columns={6} />
         </div>
+        <Footer />
       </div>
     );
   }
   if (error) return <ErrorMessage message={error} onRetry={() => fetchStocksData(activeTab)} />;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Header title="Stocks" showBack={true} onBack={handleBack} />
       
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
-        <div className="mb-8">
+        <div className="mb-8 px-2">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Stocks</h1>
-            <p className="text-gray-600">Explore trending stocks and market movers</p>
+            <h1 className="text-2xl font-bold text-gray-700 mb-2">Stocks</h1>
+            <p className="text-gray-500">Explore trending stocks and market movers</p>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-6">
+        <div className="bg-white rounded-lg mb-8">
+          <div className="">
+            <nav className="flex space-x-8 px-2">
               {tabs.map((tab) => {
                 const IconComponent = tab.icon;
                 return (
@@ -265,26 +255,18 @@ const StockScreen = () => {
                         : 'border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300'
                     }`}
                   >
-                    <IconComponent className="w-4 h-4" />
                     {tab.label}
                   </button>
                 );
               })}
             </nav>
           </div>
-
-          {/* Tab Description */}
-          <div className="px-6 py-4 bg-gray-50">
-            <p className="text-sm text-gray-600">
-              {tabs.find(tab => tab.id === activeTab)?.description}
-            </p>
-          </div>
         </div>
 
         {/* Stocks Grid/Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
+          <div className="px-6 py-4 border-b border-gray-100">
+            <h2 className="text-xl font-semibold text-gray-600">
               {tabs.find(tab => tab.id === activeTab)?.label} Stocks ({Array.isArray(stocksData) ? stocksData.length : 0})
             </h2>
           </div>
@@ -300,22 +282,22 @@ const StockScreen = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                       Company
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 tracking-wider">
                       Price
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 tracking-wider">
                       Change
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 tracking-wider">
                       52W High
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 tracking-wider">
                       52W Low
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 tracking-wider">
                       Volume
                     </th>
                   </tr>
@@ -338,7 +320,7 @@ const StockScreen = () => {
                           <div className="ml-4">
                             <div 
                               onClick={() => handleStockClick(stock)}
-                              className="text-sm font-medium text-gray-900 hover:text-teal-600 cursor-pointer transition-colors duration-200 hover:underline"
+                              className="text-sm font-medium font-semibold text-gray-700 hover:text-teal-600 cursor-pointer transition-colors duration-200 hover:underline"
                               title={stock.description || ''}
                             >
                               {stock.company_name}

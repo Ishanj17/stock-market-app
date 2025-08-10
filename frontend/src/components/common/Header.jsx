@@ -33,6 +33,12 @@ const Header = ({ title, showBack = false, onBack }) => {
       case 'watchlist':
         navigate('/watchlist');
         break;
+      case 'balance':
+        navigate('/balance');
+        break;
+      case 'transactions':
+        navigate('/transactions');
+        break;
       default:
         break;
     }
@@ -45,6 +51,8 @@ const Header = ({ title, showBack = false, onBack }) => {
     if (path === '/ipos') return 'ipos';
     if (path === '/investments') return 'investments';
     if (path === '/watchlist') return 'watchlist';
+    if (path === '/balance') return 'balance';
+    if (path === '/transactions') return 'transactions';
     return 'dashboard';
   };
 
@@ -84,32 +92,35 @@ const Header = ({ title, showBack = false, onBack }) => {
   }, [showUserMenu]);
 
   return (
-    <div className="bg-white shadow-md px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+    <div className="border-b border-gray-50 shadow-md px-8 py-4 flex justify-between items-center top-0 z-10">
       {/* Left Section - Logo, Brand, and Navigation */}
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-3 cursor-pointer transition-opacity hover:opacity-80" onClick={handleLogoClick}>
           {/* Custom Logo - Circular with teal-blue and green gradient */}
           <div className="w-8 h-8 rounded-full relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-teal-400 via-blue-500 to-green-400"></div>
-            {/* Stylized 'G' or pie chart effect */}
-            <div className="absolute inset-1 bg-white rounded-full"></div>
-            <div className="absolute inset-2 bg-gradient-to-br from-teal-400 to-green-400 rounded-full"></div>
+            <div className="w-10 h-10 rounded-full relative overflow-hidden shadow-md">
+              <div className="absolute inset-0 bg-gradient-to-br from-teal-400 via-blue-500 to-green-400"></div>
+              <div className="absolute inset-[3px] bg-white rounded-full"></div>
+              <div className="absolute inset-[6px] bg-gradient-to-br from-teal-400 to-green-400 rounded-full"></div>
+            </div>
           </div>
           {/* Brand Name */}
-          <div className="text-xl font-bold text-gray-900 tracking-tight">Crash</div>
+          <div className="tracking-wide text-2xl font-bold text-gray-800 tracking-tight">Crash</div>
         </div>
         
         {/* Navigation Links - Right next to brand name */}
         <div className="flex items-center gap-6">
-          <span 
-            className={`tracking-wider text-sm font-medium cursor-pointer transition-colors ${
-              activeRoute === 'stocks' ? 'text-gray-600' : 'text-gray-400'
-            } hover:text-gray-600`}
-            style={{fontWeight: 'bold' }}
+          <button
             onClick={() => handleNavClick('stocks')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-base tracking-wide transition-all duration-200
+              ${activeRoute === 'stocks' 
+                ? 'text-gray-900 border-b-2 border-green-500'
+                : 'text-gray-600 hover:text-gray-900'
+              }`}
+            style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", fontSize: '14px'  }}
           >
-            Stocks
-          </span>
+            <span className="hidden sm:inline">Stocks</span>
+          </button>
           {/* <span 
             className={`tracking-wider text-sm font-medium cursor-pointer transition-colors ${
               activeRoute === 'mutual-funds' ? 'text-gray-600' : 'text-gray-400'
@@ -137,13 +148,13 @@ const Header = ({ title, showBack = false, onBack }) => {
         {isAuthenticated && (
           <button
             onClick={() => handleNavClick('watchlist')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-              activeRoute === 'watchlist' 
-                ? 'bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-md' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
-            }`}
+            className={`flex items-center gap-1 px-1 py-2 rounded-md font-semibold text-base tracking-wide transition-all duration-200
+              ${activeRoute === 'watchlist' 
+                ? 'text-gray-900 border-b-2 border-green-500'
+                : 'text-gray-600 hover:text-gray-900'
+              }`}
+            style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", fontSize: '14px'  }}
           >
-            <FaEye className="w-4 h-4" />
             <span className="hidden sm:inline">Watchlist</span>
           </button>
         )}
@@ -152,13 +163,13 @@ const Header = ({ title, showBack = false, onBack }) => {
         {isAuthenticated && (
           <button
             onClick={() => handleNavClick('investments')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-              activeRoute === 'investments' 
-                ? 'bg-gradient-to-r from-teal-500 to-green-500 text-white shadow-md' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
-            }`}
+            className={`flex items-center gap-1 px-1 py-2 rounded-md font-semibold text-base tracking-wide transition-all duration-200
+              ${activeRoute === 'investments' 
+                ? 'text-gray-900 border-b-2 border-green-500'
+                : 'text-gray-600 hover:text-gray-900'
+              }`}
+            style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", fontSize: '14px'  }}
           >
-            <FaShoppingCart className="w-4 h-4" />
             <span className="hidden sm:inline">Investments</span>
           </button>
         )}
@@ -166,10 +177,14 @@ const Header = ({ title, showBack = false, onBack }) => {
         {/* Account Balance Button - Only show when authenticated */}
         {isAuthenticated && (
           <button
-            onClick={() => navigate('/balance')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm transition-all duration-200"
+            onClick={() => handleNavClick('balance')}
+            className={`flex items-center gap-1 px-1 py-2 rounded-md font-semibold text-base tracking-wide transition-all duration-200
+              ${activeRoute === 'balance' 
+                ? 'text-gray-900 border-b-2 border-green-500'
+                : 'text-gray-600 hover:text-gray-900'
+              }`}
+            style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", fontSize: '14px'  }}
           >
-            <FaWallet className="w-4 h-4" />
             <span className="hidden sm:inline">Balance</span>
           </button>
         )}
@@ -177,11 +192,15 @@ const Header = ({ title, showBack = false, onBack }) => {
         {/* Transaction History Button - Only show when authenticated */}
         {isAuthenticated && (
           <button
-            onClick={() => navigate('/transactions')}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm transition-all duration-200"
+            onClick={() => handleNavClick('transactions')}
+            className={`flex items-center gap-1 px-1 py-2 rounded-md font-semibold text-base tracking-wide transition-all duration-200
+              ${activeRoute === 'transactions' 
+                ? 'text-gray-900 border-b-2 border-green-500'
+                : 'text-gray-600 hover:text-gray-900'
+              }`}
+            style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", fontSize: '14px' }}
           >
-            <FaHistory className="w-4 h-4" />
-            <span className="hidden sm:inline">History</span>
+            <span className="hidden sm:inline">Transactions</span>
           </button>
         )}
         

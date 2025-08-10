@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaHistory, FaDownload, FaFilter, FaSearch, FaEye, FaFileAlt, FaReceipt, FaTimes } from 'react-icons/fa';
 import Header from '../common/Header';
+import TransactionReceipt from './TransactionReceipt';
 import { SkeletonTable, SkeletonTransactionRow } from '../common/SkeletonLoader';
 import Footer from '../common/Footer';
 
@@ -407,55 +408,43 @@ Thank you for using Stock Market App!
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Transaction History</h1>
-          <p className="text-gray-600">Track all your trading and account activities</p>
+          <h1 className="text-2xl font-bold text-gray-700 mb-2">Transaction History</h1>
+          <p className="text-gray-500">Track all your trading and account activities</p>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
                 <FaHistory className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Total Transactions</p>
-                <p className="text-2xl font-bold text-gray-900">{totalTransactions}</p>
+                <p className="text-sm font-semibold text-gray-500">Total Transactions</p>
+                <p className="text-xl font-bold text-gray-900">{totalTransactions}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
                 <FaFileAlt className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Total Amount</p>
+                <p className="text-sm font-semibold text-gray-500">Total Amount</p>
                 <p className="text-2xl font-bold text-gray-900">₹{totalAmount.toLocaleString()}</p>
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center">
-                <FaEye className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Fees</p>
-                <p className="text-2xl font-bold text-gray-900">₹{totalFees.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
                 <FaDownload className="w-6 h-6 text-white" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Export Data</p>
+                <p className="text-sm font-semibold text-gray-500">Export Data</p>
                 <button onClick={downloadCSV} className="text-sm text-purple-600 hover:text-purple-700 font-medium">
                   Download CSV
                 </button>
@@ -465,7 +454,7 @@ Thank you for using Stock Market App!
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div className="bg-white p-6 mb-2">  
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search */}
             <div className="flex-1 relative">
@@ -475,17 +464,17 @@ Thank you for using Stock Market App!
                 placeholder="Search transactions by stock, symbol, or ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
               />
             </div>
 
             {/* Filter by Type */}
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <FaFilter className="text-gray-400" />
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
               >
                 <option value="all">All Types</option>
                 <option value="BUY">Buy</option>
@@ -493,52 +482,52 @@ Thank you for using Stock Market App!
                 <option value="DEPOSIT">Deposit</option>
                 <option value="WITHDRAWAL">Withdrawal</option>
               </select>
-            </div>
+            </div> */}
 
             {/* Date Range */}
-            <select
+            {/* <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
             >
               <option value="all">All Time</option>
               <option value="today">Today</option>
               <option value="week">This Week</option>
               <option value="month">This Month</option>
-            </select>
+            </select> */}
 
             {/* Sort */}
-            <select
+            {/* <select
               value={`${sortBy}-${sortOrder}`}
               onChange={(e) => {
                 const [field, order] = e.target.value.split('-');
                 setSortBy(field);
                 setSortOrder(order);
               }}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
             >
               <option value="date-desc">Newest First</option>
               <option value="date-asc">Oldest First</option>
               <option value="amount-desc">Amount High to Low</option>
               <option value="amount-asc">Amount Low to High</option>
               <option value="type-asc">Type A-Z</option>
-            </select>
+            </select> */}
           </div>
         </div>
 
         {/* Transactions List */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden mt-1">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fees</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Receipt</th>
+                  <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Transaction</th>
+                  <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Details</th>
+                  <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Amount</th>
+                  <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Fees</th>
+                  <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Status</th>
+                  <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Date</th>
+                  <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Receipt</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -612,95 +601,16 @@ Thank you for using Stock Market App!
 
       {/* Receipt Modal */}
       {receiptModalOpen && selectedTransaction && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" onClick={closeReceiptModal}>
-          <div className="bg-white rounded-none shadow-2xl max-w-sm w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            {/* Receipt Header */}
-            <div className="bg-gray-900 text-white p-4 text-center border-b-4 border-green-500">
-              <div className="flex justify-between items-start mb-2">
-                <button
-                  onClick={closeReceiptModal}
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  <FaTimes className="w-4 h-4" />
-                </button>
-                <div className="flex-1">
-                  <h1 className="text-lg font-bold tracking-wider">STOCK MARKET APP</h1>
-                  <p className="text-gray-300 text-xs mt-1">Trading Platform</p>
-                </div>
-                <div className="w-4"></div>
-              </div>
-              <div className="text-center">
-                <FaReceipt className="w-6 h-6 mx-auto mb-1 text-green-400" />
-                <h2 className="text-sm font-semibold text-green-400">TRANSACTION RECEIPT</h2>
-              </div>
-            </div>
-
-            {/* Receipt Body */}
-            <div className="p-4 bg-gray-50">
-              {/* Transaction Type Badge */}
-              <div className="text-center mb-3">
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold text-white ${
-                  selectedTransaction.type === 'BUY' ? 'bg-green-600' :
-                  selectedTransaction.type === 'SELL' ? 'bg-red-600' :
-                  selectedTransaction.type === 'DEPOSIT' ? 'bg-blue-600' :
-                  'bg-orange-600'
-                }`}>
-                  {selectedTransaction.type}
-                </span>
-                <p className="text-gray-600 text-xs mt-1">{getTransactionDescription(selectedTransaction)}</p>
-              </div>
-
-              {/* Receipt Details */}
-              <div className="bg-white rounded-lg border border-gray-200 p-3 mb-3">
-                <div className="space-y-2">
-                  {getTransactionDetails(selectedTransaction).map((detail, index) => (
-                    <div key={index} className="flex justify-between items-center py-1 border-b border-gray-100 last:border-b-0">
-                      <span className="text-gray-600 text-xs font-medium">{detail.label}</span>
-                      <span className="text-gray-900 text-xs font-semibold text-right">{detail.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Total Amount Section */}
-              <div className="bg-green-600 text-white p-3 rounded-lg text-center">
-                <p className="text-xs font-medium text-green-100 mb-1">TOTAL AMOUNT</p>
-                <p className="text-2xl font-bold">
-                  ₹{(selectedTransaction.totalAmount || selectedTransaction.amount).toFixed(2)}
-                </p>
-              </div>
-
-              {/* Receipt Footer */}
-              <div className="text-center mt-3 text-gray-500 text-xs">
-                <p>Thank you for using Stock Market App</p>
-                <p className="mt-1">Generated on {new Date().toLocaleDateString('en-IN')}</p>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="bg-white p-3 border-t border-gray-200">
-              <div className="flex gap-2">
-                <button
-                  onClick={closeReceiptModal}
-                  className="flex-1 px-3 py-2 text-gray-600 hover:text-gray-800 font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-                >
-                  Close
-                </button>
-                <button 
-                  onClick={() => downloadReceipt(selectedTransaction)}
-                  className="flex-1 px-3 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 text-sm"
-                >
-                  <FaDownload className="w-3 h-3" />
-                  Download
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <TransactionReceipt
+          isOpen={receiptModalOpen}
+          onClose={closeReceiptModal}
+          transaction={selectedTransaction}
+          onDownload={downloadReceipt}
+        />
       )}
       
       {/* Footer spacing */}
-      <div className="mt-16 mb-8"></div>
+      <div className="mt-16 mb-48"></div>
       
       <Footer />
     </div>

@@ -95,48 +95,47 @@ const Watchlist = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
-        <div className="mb-8">
+        <div className="mb-8 px-2">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Watchlist</h1>
-            <p className="text-gray-600">Track your favorite stocks and get real-time updates</p>
+            <h1 className="text-2xl font-bold text-gray-700 mb-2">My Watchlist</h1>
+            <p className="text-gray-500">Track your favorite stocks and get real-time updates</p>
           </div>
         </div>
 
 
 
         {/* Watchlist Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-100">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Watched Stocks ({watchlist.length})</h2>
+            <h2 className="text-xl font-semibold text-gray-600">Watched Stocks ({watchlist.length})</h2>
           </div>
           
           {watchlist.length === 0 ? (
             <div className="p-8 text-center">
               <div className="text-gray-400 text-6xl mb-4">👀</div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Your watchlist is empty</h3>
-              <p className="text-gray-500 mb-6">Stocks will be added to your watchlist from the stock details page</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                       Stock
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                       Price
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                       Change
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                       Market Cap
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                       Volume
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -156,7 +155,7 @@ const Watchlist = () => {
                           <div className="ml-4">
                             <div 
                               onClick={() => navigate(`/stocks/detail/${stock.symbol}`)}
-                              className="text-sm font-medium text-gray-900 hover:text-teal-600 cursor-pointer transition-colors duration-200 hover:underline"
+                              className="text-sm font-medium text-gray-700 hover:text-teal-600 cursor-pointer transition-colors duration-200 hover:underline"
                             >
                               {stock.name}
                             </div>
@@ -180,16 +179,10 @@ const Watchlist = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => navigate(`/stocks/detail/${stock.symbol}`)}
-                            className="text-blue-600 hover:text-blue-900"
-                          >
-                            <FaEye className="w-4 h-4" />
-                          </button>
-                          <button
                             onClick={() => handleRemoveFromWatchlist(stock.name)}
                             className="text-red-600 hover:text-red-900"
                           >
-                            <FaTrash className="w-4 h-4" />
+                            <FaTrash className="w-2 h-2" />
                           </button>
                         </div>
                       </td>
@@ -203,7 +196,7 @@ const Watchlist = () => {
       </div>
       
       {/* Footer spacing */}
-      <div className="mt-16 mb-8"></div>
+      <div className="mt-16 mb-48"></div>
       
       <Footer />
     </div>

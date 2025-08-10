@@ -4,6 +4,9 @@ import Header from '../common/Header';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../common/Modal';
 import Footer from '../common/Footer';
+import AddFundsModal from './AddFundsModel';
+import WithdrawFundsModal from './WithdrawFundsModel';
+import { SkeletonBalanceBreakdown, SkeletonDashboardCard, SkeletonText } from '../common/SkeletonLoader';
 import axios from 'axios';
 
 const AccountBalancePage = () => {
@@ -174,12 +177,48 @@ const AccountBalancePage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header title="Account Balance" />
-        <div className="flex items-center justify-center min-h-[calc(100vh-80px)]">
-          <div className="text-center">
-            <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600 text-lg">Loading account balance...</p>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          {/* Page Header Skeleton */}
+          <div className="mb-8">
+            <div className="h-8 bg-gray-200 rounded animate-pulse w-64 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded animate-pulse w-96"></div>
+          </div>
+
+          {/* Main Balance Card Skeleton */}
+          <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gray-200 rounded-lg animate-pulse"></div>
+                <div>
+                  <div className="h-5 bg-gray-200 rounded animate-pulse w-32 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+                </div>
+              </div>
+              <div className="w-20 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+            </div>
+
+            {/* Total Balance Display Skeleton */}
+            <div className="text-center mb-8">
+              <div className="h-5 bg-gray-200 rounded animate-pulse w-48 mx-auto mb-2"></div>
+              <div className="h-16 bg-gray-200 rounded animate-pulse w-64 mx-auto mb-2"></div>
+              <div className="flex items-center justify-center gap-4">
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-4"></div>
+                <div className="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+              </div>
+            </div>
+
+            {/* Balance Breakdown Skeleton */}
+            <SkeletonBalanceBreakdown />
+          </div>
+
+          {/* Account Details Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <SkeletonDashboardCard />
+            <SkeletonDashboardCard />
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
@@ -190,40 +229,18 @@ const AccountBalancePage = () => {
       
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Account Balance</h1>
-          <p className="text-gray-600">Manage and monitor your trading account</p>
+        <div className="mb-12">
+          <h1 className="text-3xl font-bold text-gray-700 mb-2">Account Balance</h1>
+          <p className="text-gray-500">Manage and monitor your trading account</p>
         </div>
 
         {/* Main Balance Card */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-green-500 rounded-lg flex items-center justify-center">
-                <FaWallet className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">Total Balance</h2>
-                <p className="text-gray-500">Account: {balance.accountNumber}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
-              >
-                <FaSync className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
-              </button>
-
-            </div>
-          </div>
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 mb-24">
 
           {/* Total Balance Display */}
-          <div className="text-center mb-8">
-            <p className="text-gray-600 text-lg mb-2">Total Account Value</p>
-            <h1 className="text-5xl font-bold text-gray-900 mb-2">₹{balance.totalBalance.toLocaleString()}</h1>
+          <div className="text-center mb-10">
+            <p className="text-gray-500 font-semibold text-lg mb-2">Total Account Value</p>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">₹{balance.totalBalance.toLocaleString()}</h1>
             <div className="flex items-center justify-center gap-4 text-sm">
               <span className="text-green-600">+{balance.monthlyGrowth}% this month</span>
               <span className="text-gray-400">|</span>
@@ -232,7 +249,7 @@ const AccountBalancePage = () => {
           </div>
 
           {/* Balance Breakdown */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             {/* Available Balance */}
             <div className="bg-blue-50 rounded-lg p-6 text-center">
               <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-3">
@@ -240,7 +257,7 @@ const AccountBalancePage = () => {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-1">Available Balance</h3>
               <p className="text-2xl font-bold text-blue-600">₹{balance.availableBalance.toLocaleString()}</p>
-              <p className="text-sm text-gray-500 mt-1">Ready to invest</p>
+              <p className="text-sm text-gray-500 mt-1">Ready to Invest</p>
             </div>
 
             {/* Invested Amount */}
@@ -250,42 +267,35 @@ const AccountBalancePage = () => {
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-1">Invested Amount</h3>
               <p className="text-2xl font-bold text-green-600">₹{balance.investedAmount.toLocaleString()}</p>
-              <p className="text-sm text-gray-500 mt-1">In active positions</p>
+              <p className="text-sm text-gray-500 mt-1">Amount Invested</p>
             </div>
 
-            {/* Pending Amount */}
-            <div className="bg-yellow-50 rounded-lg p-6 text-center">
-              <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <FaChartLine className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">Pending Amount</h3>
-              <p className="text-2xl font-bold text-yellow-600">₹{balance.pendingAmount.toLocaleString()}</p>
-              <p className="text-sm text-gray-500 mt-1">Processing transactions</p>
-            </div>
           </div>
         </div>
 
         {/* Account Details */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Account Information */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Account Information</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                <span className="text-gray-600">Account Number</span>
-                <span className="font-medium text-gray-900">{balance.accountNumber}</span>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6">
+            <h3 className="text-gray-500 font-bold text-center text-lg mb-8">
+              Account Information
+            </h3>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="font-semibold text-gray-800">Account Number</span>
+                <span className="text-gray-800">1111111</span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                <span className="text-gray-600">Account Type</span>
-                <span className="font-medium text-gray-900">{balance.accountType}</span>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="font-semibold text-gray-800">Account Type</span>
+                <span className="text-gray-800">Trading Account</span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-gray-100">
-                <span className="text-gray-600">Currency</span>
-                <span className="font-medium text-gray-900">{balance.currency}</span>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                <span className="font-semibold text-gray-800">Currency</span>
+                <span className="text-gray-800">INR</span>
               </div>
-              <div className="flex justify-between items-center py-3">
-                <span className="text-gray-600">Last Updated</span>
-                <span className="font-medium text-gray-900">
+              <div className="flex justify-between items-center py-2">
+                <span className="font-semibold text-gray-800">Last Updated</span>
+                <span className="text-gray-800">
                   {new Date(balance.lastUpdated).toLocaleString()}
                 </span>
               </div>
@@ -293,8 +303,8 @@ const AccountBalancePage = () => {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h3>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-lg p-6">
+            <h3 className="text-gray-500 font-bold text-center text-lg mb-8">Quick Actions</h3>
             <div className="space-y-3">
               <button 
                 onClick={handleAddFunds}
@@ -357,188 +367,28 @@ const AccountBalancePage = () => {
       
       {/* Add Funds Modal */}
       {addFundsModalOpen && (
-        <Modal isOpen={addFundsModalOpen} onClose={() => setAddFundsModalOpen(false)}>
-          <div className="bg-white rounded-lg p-6 max-w-md mx-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Add Funds to Account</h3>
-              <button
-                onClick={() => setAddFundsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <FaTimes className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <form onSubmit={handleAddFundsSubmit}>
-              {/* Amount Input */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Amount to Add (₹)
-                </label>
-                <input
-                  type="number"
-                  min="500"
-                  step="100"
-                  value={addFundsAmount}
-                  onChange={(e) => setAddFundsAmount(e.target.value)}
-                  placeholder="Enter amount (min: ₹500)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Minimum amount: ₹500
-                </p>
-              </div>
-              
-              {/* Bank Details */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Bank Account Number
-                </label>
-                <input
-                  type="text"
-                  value={bankDetails.accountNumber}
-                  onChange={(e) => setBankDetails({...bankDetails, accountNumber: e.target.value})}
-                  placeholder="Enter bank account number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  IFSC Code
-                </label>
-                <input
-                  type="text"
-                  value={bankDetails.ifscCode}
-                  onChange={(e) => setBankDetails({...bankDetails, ifscCode: e.target.value.toUpperCase()})}
-                  placeholder="Enter IFSC code"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Account Holder Name
-                </label>
-                <input
-                  type="text"
-                  value={bankDetails.accountHolderName}
-                  onChange={(e) => setBankDetails({...bankDetails, accountHolderName: e.target.value})}
-                  placeholder="Enter account holder name"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setAddFundsModalOpen(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={processing}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                >
-                  {processing ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Processing...
-                    </>
-                  ) : (
-                    'Add Funds'
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </Modal>
+        <AddFundsModal
+          isOpen={addFundsModalOpen}
+          onClose={() => setAddFundsModalOpen(false)}
+          onSubmit={handleAddFundsSubmit}
+          processing={processing}
+        />
       )}
+      
       
       {/* Withdraw Funds Modal */}
       {withdrawModalOpen && (
-        <Modal isOpen={withdrawModalOpen} onClose={() => setWithdrawModalOpen(false)}>
-          <div className="bg-white rounded-lg p-6 max-w-md mx-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Withdraw Funds</h3>
-              <button
-                onClick={() => setWithdrawModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <FaTimes className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <form onSubmit={handleWithdrawSubmit}>
-              {/* Available Balance Info */}
-              <div className="bg-blue-50 rounded-lg p-3 mb-4">
-                <div className="text-sm text-blue-800">
-                  <span className="font-medium">Available Balance:</span>
-                  <div className="text-lg font-bold text-blue-900">
-                    ₹{balance.availableBalance.toLocaleString()}
-                  </div>
-                </div>
-              </div>
-              
-              {/* Amount Input */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Withdrawal Amount (₹)
-                </label>
-                <input
-                  type="number"
-                  min="100"
-                  max={balance.availableBalance}
-                  step="100"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  placeholder="Enter withdrawal amount"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Minimum: ₹100 | Maximum: ₹{balance.availableBalance.toLocaleString()}
-                </p>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setWithdrawModalOpen(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={processing}
-                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-md font-medium hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                >
-                  {processing ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Processing...
-                    </>
-                  ) : (
-                    'Withdraw Funds'
-                  )}
-                                  </button>
-                </div>
-              </form>
-            </div>
-          </Modal>
-        )}
+        <WithdrawFundsModal
+          isOpen={withdrawModalOpen}
+          onClose={() => setWithdrawModalOpen(false)}
+          onSubmit={handleWithdrawSubmit}
+          processing={processing}
+          availableBalance={balance.availableBalance}
+        />
+      )}
       
       {/* Footer spacing */}
-      <div className="mt-16 mb-8"></div>
+      <div className="mt-16 mb-48"></div>
       
       <Footer />
     </div>

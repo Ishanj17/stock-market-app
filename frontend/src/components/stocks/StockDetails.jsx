@@ -27,9 +27,6 @@ const StockDetails = () => {
       setLoading(true);
       try {
         const API_BASE_URL = process.env.REACT_APP_API_URL;
-        // MOCK API - Replace with real API call
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
-        
         const res = await axios.get(`${API_BASE_URL}/api/stocks/detail?name=${name}`);
         setStock(res.data);
         // Check if stock is in watchlist
@@ -75,7 +72,7 @@ const StockDetails = () => {
       setTimeout(() => {
         setIsInWatchlist(true);
         setWatchlistLoading(false);
-        alert(`${stock.name} added to watchlist!`);
+        // alert(`${stock.name} added to watchlist!`);
       }, 1000);
     } catch (error) {
       console.error('Error adding to watchlist:', error);
@@ -94,7 +91,7 @@ const StockDetails = () => {
       setTimeout(() => {
         setIsInWatchlist(false);
         setWatchlistLoading(false);
-        alert(`${stock.name} removed from watchlist!`);
+        // alert(`${stock.name} removed from watchlist!`);
       }, 1000);
     } catch (error) {
       console.error('Error removing from watchlist:', error);
@@ -108,7 +105,7 @@ const StockDetails = () => {
   };
 
   const formatNumber = (num) => {
-    if (!num) return 'N/A';
+    if (!num) return '-';
     if (typeof num === 'string') return num;
     if (num >= 1000000000) return `₹${(num / 1000000000).toFixed(2)}B`;
     if (num >= 1000000) return `₹${(num / 1000000).toFixed(2)}M`;
@@ -117,7 +114,7 @@ const StockDetails = () => {
   };
 
   const formatPercent = (num) => {
-    if (!num) return 'N/A';
+    if (!num) return '-';
     return typeof num === 'string' ? num : `${num.toFixed(2)}%`;
   };
 
@@ -212,7 +209,7 @@ const StockDetails = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <Header title={stock.name || 'Stock Details'} showBack={true} onBack={handleBack} />
       
       <div className="max-w-6xl mx-auto px-2 sm:px-4 lg:px-6 py-6">
@@ -243,10 +240,10 @@ const StockDetails = () => {
               {isAuthenticated && (
                 <button
                   onClick={() => setIsBuyModalOpen(true)}
-                  className="bg-gradient-to-r from-teal-500 to-green-500 text-white px-6 py-3 rounded-lg font-medium hover:from-teal-600 hover:to-green-600 transition-all duration-200 flex items-center gap-2 shadow-md"
+                  className="bg-gradient-to-r from-teal-500 to-green-500 text-white px-5 py-3 rounded-md font-medium hover:from-teal-600 hover:to-green-600 transition-all duration-200 flex items-center gap-2 shadow-md"
                 >
                   <FaShoppingCart className="w-4 h-4" />
-                  Buy Stock
+                  <span style={{fontSize: '14px'}}>Buy Stock</span>
                 </button>
               )}
               
@@ -255,7 +252,7 @@ const StockDetails = () => {
                 <button
                   onClick={isInWatchlist ? handleRemoveFromWatchlist : handleAddToWatchlist}
                   disabled={watchlistLoading}
-                  className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
+                  className={`px-5 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
                     isInWatchlist 
                       ? 'bg-red-100 text-red-700 hover:bg-red-200' 
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -268,14 +265,9 @@ const StockDetails = () => {
                   ) : (
                     <FaEye className="w-4 h-4" />
                   )}
-                  {isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
+                  <span style={{fontSize: '14px'}}>{isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}</span>
                 </button>
               )}
-              
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="hero-subheading">Risk Level</div>
-                <div className="font-semibold text-gray-500">{stock.risk}</div>
-              </div>
             </div>
           </div>
         </div>
