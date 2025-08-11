@@ -11,6 +11,8 @@ const mfRoutes = require('./routes/mutualFunds');
 const ipoRoutes = require('./routes/ipos');
 const newsRoutes = require('./routes/news');
 const userRoutes = require('./routes/user');
+const watchlistRoutes = require('./routes/watchlist');
+const transactionsRoutes = require('./routes/transactions');
 
 app.use(cors());
 app.use(express.json());
@@ -23,6 +25,8 @@ app.use('/api/ipos', ipoRoutes);
 app.use('/api/news', newsRoutes);
 // internal calls
 app.use('/api/user',userRoutes);
+app.use('/api/watchlist',watchlistRoutes);
+app.use('/api/transactions',transactionsRoutes);
 
 const PORT = 5000;
 app.listen(PORT,'0.0.0.0', () => {
