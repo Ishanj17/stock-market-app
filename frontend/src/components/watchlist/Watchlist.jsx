@@ -6,64 +6,49 @@ import ErrorMessage from '../common/ErrorMessage';
 import { SkeletonStockCard, SkeletonList } from '../common/SkeletonLoader';
 import Footer from '../common/Footer';
 import { FaTrash, FaEye } from 'react-icons/fa';
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import { successToast, failureToast } from '../common/toast';
 
-// Mock data for watchlist
-const mockWatchlist = [
-  {
-    id: 1,
-    symbol: 'RELIANCE',
-    name: 'Reliance Industries Ltd.',
-    price: 2750.00,
-    change: 50.00,
-    changePercent: 1.85,
-    marketCap: '₹17.5T',
-    volume: '45.2M'
-  },
-  {
-    id: 2,
-    symbol: 'TCS',
-    name: 'TCS Ltd.',
-    price: 3990.00,
-    change: 190.00,
-    changePercent: 5.00,
-    marketCap: '₹15.2T',
-    volume: '32.1M'
-  },
-  {
-    id: 3,
-    symbol: 'HDFC',
-    name: 'HDFC Bank Ltd.',
-    price: 1650.00,
-    change: -25.00,
-    changePercent: -1.49,
-    marketCap: '₹9.8T',
-    volume: '28.7M'
-  }
-];
 
 const Watchlist = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   const [error, setError] = useState(null);
   const [watchlist, setWatchlist] = useState([]);
 
   useEffect(() => {
-    // MOCK API - Replace with real API call
-    setTimeout(() => {
-      setLoading(false);
-      setWatchlist(mockWatchlist);
-    }, 1500); // Simulate API delay
+    if (!user?.user_id) return;
+
+    const fetchWatchlist = async () => {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const { data : {code, message, data}} = await axios.post(`${apiUrl}/api/watchlist/get-watchlist`, {
+        user_id: user.user_id
+      });
+      if(code === 200) {
+        setWatchlist(data);
+        setLoading(false);
+      } else {
+        setError(message);
+        setLoading(false);
+      }
+    };
+    fetchWatchlist();
   }, []);
 
   const handleRemoveFromWatchlist = async (stockName) => {
-    // MOCK API - Replace with real API call
-    setTimeout(() => {
+    const apiUrl = process.env.REACT_APP_API_URL;
+    const { data : {code, message, data}} = await axios.post(`${apiUrl}/api/watchlist/remove-from-watchlist`, {
+      user_id: user.user_id,
+      stock_name: stockName
+    });
+    if(code === 200) {
       setWatchlist(prev => prev.filter(stock => stock.name !== stockName));
-    }, 500); // Simulate API delay
-  };
-
-  const getChangeColor = (change) => {
-    return change >= 0 ? 'text-green-600' : 'text-red-600';
+      successToast('Stock removed from watchlist successfully!');
+    } else {
+      failureToast('Failed to remove from watchlist. Please try again later.');
+    }
   };
 
   if (loading) {
@@ -124,16 +109,16 @@ const Watchlist = () => {
                       Stock
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
-                      Price
+                      Industry
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
-                      Change
+                      Risk
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
-                      Market Cap
+                      Year Low
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
-                      Volume
+                      Year High
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                       Actions
@@ -148,13 +133,13 @@ const Watchlist = () => {
                           <div className="flex-shrink-0 h-10 w-10">
                             <div className="h-10 w-10 rounded-full bg-gradient-to-r from-teal-500 to-green-500 flex items-center justify-center">
                               <span className="text-white font-bold text-sm">
-                                {stock.symbol.charAt(0)}
+                                {stock.name.charAt(0)}
                               </span>
                             </div>
                           </div>
                           <div className="ml-4">
                             <div 
-                              onClick={() => navigate(`/stocks/detail/${stock.symbol}`)}
+                              onClick={() => navigate(`/stocks/detail/${stock.name.replace(/\s+Ltd$/i, '')}`)}
                               className="text-sm font-medium text-gray-700 hover:text-teal-600 cursor-pointer transition-colors duration-200 hover:underline"
                             >
                               {stock.name}
@@ -163,18 +148,17 @@ const Watchlist = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ₹{stock.price.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className={`text-sm font-medium ${getChangeColor(stock.change)}`}>
-                          {stock.change >= 0 ? '+' : ''}₹{stock.change.toFixed(2)} ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%)
-                        </div>
+                        {/* ₹{stock.price.BSE.toFixed(2)} */}
+                        {stock.industry}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {stock.marketCap}
+                        {stock.risk}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {stock.volume}
+                        {stock.yearLow}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {stock.yearHigh}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center gap-2">

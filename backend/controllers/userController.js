@@ -39,7 +39,8 @@ const userController = {
               created: true, 
               message: 'User Created Successfully!', 
               token: jwtToken,
-              first_name: first_name 
+              first_name: userCreation.first_name,
+              user_id: userCreation.user_id
             });
 					} else {
 							return res.json({code: 200, created: false, message: 'User Created Failed!'})
@@ -63,13 +64,14 @@ const userController = {
 			if (match) {
         console.log(user, "user");
         const jwtToken = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        return res.json({ 
-          code: 200, 
-          success: true, 
-          message: 'User logged in successfully!', 
-          token: jwtToken,
-          first_name: user.first_name 
-        });
+          return res.json({ 
+            code: 200, 
+            success: true, 
+            message: 'User logged in successfully!', 
+            token: jwtToken,
+            first_name: user.first_name,
+            user_id: user.user_id
+            });
 			} else {
 					return res.status(401).json({ code: 401, success: false, message: 'Invalid password' });
 			}

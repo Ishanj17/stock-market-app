@@ -11,12 +11,12 @@ async function findUserByEmail(email) {
 }
 
 async function createUser({ first_name, email, password_hash}) {
-    const query = 'INSERT INTO user_accounts (name, email, password_hash) VALUES($1, $2, $3)';
+    const query = 'INSERT INTO user_accounts (name, email, password_hash) VALUES($1, $2, $3) RETURNING *';
     const res = await pool.query(query, [first_name, email, password_hash]);
     if(res.rowCount === 0) {
-        return false;
+        return null;
     }
-    return true;
+    return res.rows[0];
 }
 
 async function passwordCheck(harshedPassword) {

@@ -38,7 +38,7 @@ const transactionsController = {
 
 			if(balance.length === 0 ||balance[0].total_balance < price*quantity) {
 					return res.json({
-							code: 200,
+							code: 400,
 							message: 'Insufficient balance!',
 							data: []
 					});

@@ -4,6 +4,8 @@ import Modal from '../common/Modal';
 import { FaTimes, FaShoppingCart } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { SkeletonCard, SkeletonText } from '../common/SkeletonLoader';
+import axios from 'axios';
+import { failureToast, successToast } from '../common/toast';
 
 const BuyStockModal = ({ isOpen, onClose, stock }) => {
   const navigate = useNavigate();
@@ -19,45 +21,32 @@ const BuyStockModal = ({ isOpen, onClose, stock }) => {
   const handleBuyStock = async () => {
     setLoading(true);
     try {
-      // MOCK API - Replace with real API call
       const apiUrl = process.env.REACT_APP_API_URL;
-      
-      // For now, simulate a successful purchase since this is a mock implementation
-      // In real implementation, you would make the actual API call
-      setTimeout(() => {
-        // Close modal and navigate to investments page
-        onClose();
-        // navigate('/investments');
-      }, 1000); // Simulate processing time
-      
-      // TODO: Uncomment this when real API is available
-      /*
-      const response = await fetch(`${apiUrl}/api/investments/buy-stock`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        body: JSON.stringify({
-          stockSymbol: stock.name,
-          stockName: stock.name,
-          quantity: quantity,
-          pricePerShare: currentPrice,
-          totalAmount: totalAmount
-        }),
+      const { data : {data : [balanceDetails]} } = await axios.post(`${apiUrl}/api/transactions/get-current-balance`, {
+        user_id: user.user_id
       });
-
-      if (response.ok) {
-        // Close modal and navigate to investments page
-        onClose();
-        navigate('/investments');
-      } else {
-        alert('Failed to buy stock. Please try again.');
+      if(balanceDetails.total_balance < totalAmount) {
+        handleClose();
+        failureToast('Insufficient balance! Please add more funds to your account.');
+        return;
       }
-      */
+
+      const { data : {code, message, data}} = await axios.post(`${apiUrl}/api/transactions/buy-stock`, {
+        user_id: user.user_id,
+        stock_name: stock.name,
+        quantity: String(quantity),
+        price: Math.floor(currentPrice)
+      });
+      if(code === 200) {
+        handleClose();
+        successToast('Successfully bought '+quantity+' shares of '+stock.name);
+        return;
+      }
+      failureToast(message+' Please try again later.');
+      handleClose();
     } catch (error) {
       console.error('Error buying stock:', error);
-      alert('Error buying stock. Please try again.');
+      failureToast('Error buying stock. Please try again.');
     } finally {
       setLoading(false);
     }

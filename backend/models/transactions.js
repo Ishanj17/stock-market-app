@@ -3,14 +3,14 @@ const { pool } = require('../db');
 const checkBalance = async (user_id) => {
     const query = `SELECT * FROM balance_details WHERE user_id = $1`;
     const result = await pool.query(query, [user_id]);
-    console.log(result, 'result');
+    // console.log(result, 'result');
     return result.rows || [];
 }
 
 const addStockToPortfolio = async (user_id, stock_name, quantity, price, invested_amount) => {
     const query = `INSERT INTO portfolio (user_id, stock_name, quantity, price_per_share, invested_amount) VALUES ($1, $2, $3, $4, $5)`;
     const result = await pool.query(query, [user_id, stock_name, quantity, price, invested_amount]);
-    console.log(result, 'result');
+    // console.log(result, 'result');
     return result.rowCount;
 }
 
@@ -28,7 +28,7 @@ const updateBalance = async (user_id, amount, type) => {
             WHERE user_id = $2`;
     }
     const result = await pool.query(query, [amount, user_id]);
-    console.log(result, 'result');
+    // console.log(result, 'result');
     return result.rowCount;
 }
 
@@ -44,21 +44,21 @@ const addWithdrawBalance = async (user_id, amount, type) => {
             WHERE user_id = $2`;
     }
     const result = await pool.query(query, [amount, user_id]);
-    console.log(result, 'result');
+    // console.log(result, 'result');
     return result.rowCount;
 }
 
 const updateTransactions = async (user_id, stock_name, quantity, price, type) => {
     const query = `INSERT INTO transactions (user_id, stock_name, quantity, price_per_share, transaction_type) VALUES ($1, $2, $3, $4, $5)`;
     const result = await pool.query(query, [user_id, stock_name, quantity, price, type]);
-    console.log(result, 'result');
+    // console.log(result, 'result');
     return result.rowCount;
 }
 
 const checkStockInPortfolio = async (user_id, stock_name) => {
     const query = `SELECT * FROM portfolio WHERE user_id = $1 AND stock_name = $2`;
     const result = await pool.query(query, [user_id, stock_name]);
-    console.log(result, 'result');
+    // console.log(result, 'result');
     return result.rows;
 }
 
@@ -81,28 +81,28 @@ const updatePortfolio = async (user_id, stock_name, quantity, price, invested_am
         RETURNING *`;
         result = await pool.query(query, [quantity, user_id, stock_name, invested_amount]);
     }
-    console.log(result, 'result');
+    // console.log(result, 'result');
     return result.rowCount;
 }
 
 const getInvestments = async (user_id) => {
     const query = `SELECT * FROM portfolio WHERE user_id = $1`;
     const result = await pool.query(query, [user_id]);
-    console.log(result, 'result');
+    // console.log(result, 'result');
     return result.rows;
 }
 
 const getCurrentBalance = async (user_id) => {
     const query = `SELECT * FROM balance_details WHERE user_id = $1`;
     const result = await pool.query(query, [user_id]);
-    console.log(result, 'result');
+    // console.log(result, 'result');
     return result.rows;
 }
 
 const getTransactions = async (user_id) => {
     const query = `SELECT * FROM transactions WHERE user_id = $1`;
     const result = await pool.query(query, [user_id]);
-    console.log(result, 'result');
+    // console.log(result, 'result');
     return result.rows;
 }
 

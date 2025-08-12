@@ -84,7 +84,8 @@ const AuthModal = ({ isOpen, onClose }) => {
         // Store user data and token
         const userData = {
           email: email,
-          firstName: data.first_name || email.split('@')[0], // Fallback to email prefix if no first_name
+          firstName: data.first_name || email.split('@')[0], 
+          user_id: data.user_id,
         };
         login(userData, data.token);
         
@@ -134,6 +135,7 @@ const AuthModal = ({ isOpen, onClose }) => {
         const userData = {
           email: email,
           firstName: name,
+          user_id: data.user_id,
         };
         login(userData, data.token);
         

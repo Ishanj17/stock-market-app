@@ -8,10 +8,11 @@ import { useAuth } from '../../context/AuthContext';
 import { FaShoppingCart, FaEye, FaEyeSlash } from 'react-icons/fa';
 import axios from 'axios';
 import './stocks.css';
+import { failureToast, successToast } from '../common/toast';
 
 const StockDetails = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   let { name } = useParams();
   
   const [loading, setLoading] = useState(true);
@@ -19,7 +20,7 @@ const StockDetails = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
-  const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const [isInWatchlist, setIsInWatchlist] = useState();
   const [watchlistLoading, setWatchlistLoading] = useState(false);
 
   useEffect(() => {
@@ -40,18 +41,23 @@ const StockDetails = () => {
     };
 
     fetchStockData();
-  }, [name]);
+  }, []);
 
   const checkWatchlistStatus = async (stockName) => {
     if (!isAuthenticated) return;
     
     try {
-      // Mock API call to check if stock is in watchlist
-      setTimeout(() => {
-        // Mock response - in real app, this would be an API call
-        const mockWatchlist = ['AAPL', 'TSLA', 'MSFT', 'GOOGL'];
-        setIsInWatchlist(mockWatchlist.includes(stockName));
-      }, 500);
+      console.log('user.user_id and stockName');
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const { data : {code, message, data}} = await axios.post(`${apiUrl}/api/watchlist/check-watchlist-status`, {
+        user_id: user.user_id,
+        stock_name: stockName
+      });
+      if(code === 200) { 
+        setIsInWatchlist(true);
+      } else {
+        setIsInWatchlist(false);
+      }
     } catch (error) {
       console.error('Error checking watchlist status:', error);
     }
@@ -59,24 +65,28 @@ const StockDetails = () => {
 
   const handleAddToWatchlist = async () => {
     if (!isAuthenticated) {
-      alert('Please login to add stocks to watchlist');
+      failureToast('Please login to add stocks to watchlist');
       return;
     }
 
     setWatchlistLoading(true);
     try {
-      // MOCK API - Replace with real API call
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-      
-      // Simulate API call
-      setTimeout(() => {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const { data : {code, message, data}} = await axios.post(`${apiUrl}/api/watchlist/add-to-watchlist`, {
+        user_id: user.user_id,
+        stock_name: stock.name
+      });
+      if(code === 200) {
         setIsInWatchlist(true);
         setWatchlistLoading(false);
-        // alert(`${stock.name} added to watchlist!`);
-      }, 1000);
+        successToast(stock.name+' added to watchlist successfully!');
+      } else {
+        failureToast('Failed to add to watchlist. Please try again later.');
+        setWatchlistLoading(false);
+      }
     } catch (error) {
       console.error('Error adding to watchlist:', error);
-      alert('Failed to add to watchlist. Please try again.');
+      failureToast('Failed to add to watchlist. Please try again.');
       setWatchlistLoading(false);
     }
   };
@@ -84,18 +94,22 @@ const StockDetails = () => {
   const handleRemoveFromWatchlist = async () => {
     setWatchlistLoading(true);
     try {
-      // MOCK API - Replace with real API call
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-      
-      // Simulate API call
-      setTimeout(() => {
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const { data : {code, message, data}} = await axios.post(`${apiUrl}/api/watchlist/remove-from-watchlist`, {
+        user_id: user.user_id,
+        stock_name: stock.name
+      });
+      if(code === 200) {
         setIsInWatchlist(false);
         setWatchlistLoading(false);
-        // alert(`${stock.name} removed from watchlist!`);
-      }, 1000);
+        successToast(stock.name+' removed from watchlist successfully!');
+      } else {
+        failureToast('Failed to remove from watchlist. Please try again later.');
+        setWatchlistLoading(false);
+      }
     } catch (error) {
       console.error('Error removing from watchlist:', error);
-      alert('Failed to remove from watchlist. Please try again.');
+      failureToast('Failed to remove from watchlist. Please try again.');
       setWatchlistLoading(false);
     }
   };
