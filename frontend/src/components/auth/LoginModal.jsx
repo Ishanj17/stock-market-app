@@ -118,7 +118,7 @@ const AuthModal = ({ isOpen, onClose }) => {
     try {
       // MOCK API - Replace with real API call
       const apiUrl = process.env.REACT_APP_API_URL;
-      const response = await fetch(`${apiUrl}/api/user/signup`, {
+      const response = await fetch(`${apiUrl}/api/user/sign-up`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ 

@@ -1,4 +1,4 @@
-const { checkBalance, addStockToPortfolio, updateBalance, checkStockInPortfolio, updatePortfolio, updateTransactions } = require('../models/transactions');
+const { checkBalance, addStockToPortfolio, updateBalance, checkStockInPortfolio, updatePortfolio, updateTransactions, addWithdrawBalance } = require('../models/transactions');
 
 const transactionsController = {
 
@@ -160,6 +160,63 @@ const transactionsController = {
 					}
 			});
 	},
+
+	async addMoney(req, res) {
+		const {user_id, amount} = req.body;
+		const updatedBalance = await addWithdrawBalance(user_id, amount, 'ADD');
+		if(updatedBalance === 0) {
+		return res.json({
+			code: 400,
+			message: 'Internal Server Error!',
+			data: []
+		});
+		}
+		console.log("jo")
+		const updatedTransactions = await updateTransactions(user_id, '', 1, amount, 'ADD');
+		if(updatedTransactions === 0) {
+		return res.json({
+			code: 400,
+			message: 'Internal Server Error!',
+			data: []
+		});
+		}
+		return res.json({
+		code: 200,
+		message: 'Money added successfully!',
+		data: {
+			user_id: user_id,
+			amount: amount
+		}
+		});
+	},
+
+ async withdrawMoney(req, res) {
+		const {user_id, amount} = req.body;
+		const updatedBalance = await addWithdrawBalance(user_id, amount, 'WITHDRAW');
+		if(updatedBalance === 0) {
+		return res.json({
+			code: 400,
+			message: 'Internal Server Error!',
+			data: []
+		});
+		}
+		const updatedTransactions = await updateTransactions(user_id,'', 1, amount, 'WITHDRAW');
+		if(updatedTransactions === 0) {
+		return res.json({
+			code: 400,
+			message: 'Internal Server Error!',
+			data: []
+		});
+		}
+		return res.json({
+		code: 200,
+		message: 'Money withdrawn successfully!',
+		data: {
+			user_id: user_id,
+			amount: amount
+		}
+		});
+	}
 
 }
 

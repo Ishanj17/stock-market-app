@@ -32,6 +32,22 @@ const updateBalance = async (user_id, amount, type) => {
     return result.rowCount;
 }
 
+const addWithdrawBalance = async (user_id, amount, type) => {
+    let query = '';
+    if(type === 'ADD') {
+        query = `UPDATE balance_details
+            SET total_balance = total_balance + $1
+            WHERE user_id = $2`;
+    } else if(type === 'WITHDRAW') {
+        query = `UPDATE balance_details
+            SET total_balance = total_balance - $1
+            WHERE user_id = $2`;
+    }
+    const result = await pool.query(query, [amount, user_id]);
+    console.log(result, 'result');
+    return result.rowCount;
+}
+
 const updateTransactions = async (user_id, stock_name, quantity, price, type) => {
     const query = `INSERT INTO transactions (user_id, stock_name, quantity, price_per_share, transaction_type) VALUES ($1, $2, $3, $4, $5)`;
     const result = await pool.query(query, [user_id, stock_name, quantity, price, type]);
@@ -67,4 +83,4 @@ const updatePortfolio = async (user_id, stock_name, quantity, price, type) => {
     return result.rowCount;
 }
 
-module.exports = { checkBalance, addStockToPortfolio, updateBalance, updateTransactions, checkStockInPortfolio, updatePortfolio };
+module.exports = { checkBalance, addStockToPortfolio, updateBalance, updateTransactions, checkStockInPortfolio, updatePortfolio, addWithdrawBalance };

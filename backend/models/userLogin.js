@@ -1,4 +1,4 @@
-const pool = require('../db');
+const {pool} = require('../db');
 
 async function findUserByEmail(email) {
     const res = await pool.query('SELECT * FROM user_accounts WHERE email = $1', [email]);
@@ -11,7 +11,7 @@ async function findUserByEmail(email) {
 }
 
 async function createUser({ first_name, email, password_hash}) {
-    const query = 'INSERT INTO user_accounts (first_name, email, password_hash) VALUES($1, $2, $3)';
+    const query = 'INSERT INTO user_accounts (name, email, password_hash) VALUES($1, $2, $3)';
     const res = await pool.query(query, [first_name, email, password_hash]);
     if(res.rowCount === 0) {
         return false;

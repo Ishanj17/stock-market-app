@@ -9,9 +9,9 @@ router.post('/buy-stock', transactionsController.buyStock);
 // POST /api/transactions/sell-stock
 router.post('/sell-stock', transactionsController.sellStock);
 // POST /api/transactions/add-money
-// router.post('/add-money', transactionsController.addMoney);
+router.post('/add-money', transactionsController.addMoney);
 // POST /api/transactions/withdraw-money
-// router.post('/withdraw-money', transactionsController.withdrawMoney);
+router.post('/withdraw-money', transactionsController.withdrawMoney);
 
 module.exports = router;
 
