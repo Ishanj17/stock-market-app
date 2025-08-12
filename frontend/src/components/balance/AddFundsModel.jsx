@@ -7,25 +7,22 @@ export default function AddFundsModal({
   onClose,
   onSubmit,
   processing = false,
+  accountNumber
 }) {
   const [amount, setAmount] = useState("");
   const [bankDetails, setBankDetails] = useState({
     accountNumber: "",
-    ifscCode: "",
-    accountHolderName: "",
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ amount: parseFloat(amount), ...bankDetails });
+    onSubmit({ amount: parseFloat(amount)});
   };
 
   const handleClose = () => {
     setAmount("");
     setBankDetails({
       accountNumber: "",
-      ifscCode: "",
-      accountHolderName: "",
     });
     onClose();
   };
@@ -123,9 +120,6 @@ export default function AddFundsModal({
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-300"
                     required
                   />
-                  <p className="text-xs text-gray-500 mt-1 text-center">
-                    Minimum amount: ₹500
-                  </p>
                 </div>
 
                 {/* Bank Details */}
@@ -135,24 +129,14 @@ export default function AddFundsModal({
                   </label>
                   <input
                     type="text"
-                    value={bankDetails.accountNumber}
-                    onChange={(e) => setBankDetails({...bankDetails, accountNumber: e.target.value})}
+                    value={accountNumber}
+                    disabled={true}
                     placeholder="Enter bank account number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-300"
-                    required
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    IFSC Code
-                  </label>
-                  <input
-                    type="text"
-                    value={bankDetails.ifscCode}
-                    onChange={(e) => setBankDetails({...bankDetails, ifscCode: e.target.value.toUpperCase()})}
-                    placeholder="Enter IFSC code"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-300"
+                    style={{
+                      opacity: 0.7,
+                      backgroundColor: '#f0f0f0',
+                    }}
+                    className="w-full px-3 py-2 border border-gray-400 rounded-lg"
                     required
                   />
                 </div>
@@ -160,7 +144,7 @@ export default function AddFundsModal({
                 {/* Add Funds Button */}
                 <button
                   type="submit"
-                  disabled={processing}
+                  disabled={processing || amount < 500}
                   style={{
                     backgroundColor: '#10B981',
                   }}

@@ -8,8 +8,11 @@ import AddFundsModal from './AddFundsModel';
 import WithdrawFundsModal from './WithdrawFundsModel';
 import { SkeletonBalanceBreakdown, SkeletonDashboardCard, SkeletonText } from '../common/SkeletonLoader';
 import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import { successToast, failureToast } from '../common/toast';
 
 const AccountBalancePage = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,45 +29,36 @@ const AccountBalancePage = () => {
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    // MOCK API - Replace with real API call
-    setTimeout(() => {
-      const mockBalance = {
-        availableBalance: 12500.75,
-        investedAmount: 6855.00,
-        totalBalance: 19355.75,
-        pendingAmount: 0.00,
-        currency: 'INR',
-        lastUpdated: new Date().toISOString(),
-        monthlyGrowth: 12.5,
-        yearlyGrowth: 8.2,
-        accountNumber: 'ACC123456789',
-        accountType: 'Trading Account'
-      };
-      setLoading(false);
-      setBalance(mockBalance);
-    }, 1500); // Simulate API delay
-  }, []);
+    if(user?.user_id) {
+      fetchBalance()
+    }
+  }, [user?.user_id]);
 
   const fetchBalance = async () => {
     setLoading(true);
     try {
-      // Mock API call with timeout
-      setTimeout(() => {
-        const mockBalance = {
-          availableBalance: 12500.75,
-          investedAmount: 6855.00,
-          totalBalance: 19355.75,
-          pendingAmount: 0.00,
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const { data : {code, message, data}} = await axios.post(`${apiUrl}/api/transactions/get-current-balance`, {
+        user_id: user.user_id
+      });
+      console.log(code, message, data, 'code, message, data');
+      if(code === 200) {
+        const tempBalance = {
+          availableBalance: data[0].available_balance,
+          investedAmount: data[0].invested_amount,
+          totalBalance: data[0].total_balance,
           currency: 'INR',
-          lastUpdated: new Date().toISOString(),
+          lastUpdated: data[0].updated_at,
           monthlyGrowth: 12.5,
           yearlyGrowth: 8.2,
-          accountNumber: 'ACC123456789',
+          accountNumber: data[0].bank_account_number,
           accountType: 'Trading Account'
         };
-        setBalance(mockBalance);
-        setLoading(false);
-      }, 1000);
+        setBalance(tempBalance);
+      } else {
+        failureToast('Please try again later');
+      } 
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching balance:', error);
       setLoading(false);
@@ -80,11 +74,11 @@ const AccountBalancePage = () => {
   const handleAddFunds = () => {
     setAddFundsModalOpen(true);
     setAddFundsAmount('');
-    setBankDetails({
-      accountNumber: '',
-      ifscCode: '',
-      accountHolderName: ''
-    });
+    if(balance) {
+      setBankDetails({
+        accountNumber: balance.accountNumber,
+      });
+    }
   };
 
   const handleWithdrawFunds = () => {
@@ -92,84 +86,60 @@ const AccountBalancePage = () => {
     setWithdrawAmount('');
   };
 
-  const handleAddFundsSubmit = async (e) => {
-    e.preventDefault();
-    if (!addFundsAmount || !bankDetails.accountNumber || !bankDetails.ifscCode || !bankDetails.accountHolderName) {
-      alert('Please fill in all fields');
-      return;
-    }
-
-    const amount = parseFloat(addFundsAmount);
-    if (amount < 500) {
-      alert('Minimum amount required is ₹500');
-      return;
-    }
-
+  const handleAddFundsSubmit = async ({amount}) => {
     setProcessing(true);
+    console.log(amount, 'amount');
+    console.log(user.user_id, 'user.user_id');
     try {
-      // MOCK API - Replace with real API call
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
-      
-      alert(`Successfully initiated fund transfer of ₹${amount.toLocaleString()} from ${bankDetails.accountHolderName}'s account. Funds will be credited within 1-2 business days.`);
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const { data : {code, message, data}} = await axios.post(`${apiUrl}/api/transactions/add-money`, {
+        user_id: user.user_id,
+        amount: amount,
+      });
+      if(code === 200) {
+        successToast('Money added successfully');
+      } else {
+        failureToast('Please try again later');
+      }
       setAddFundsModalOpen(false);
       setAddFundsAmount('');
       setBankDetails({
         accountNumber: '',
-        ifscCode: '',
-        accountHolderName: ''
       });
-      
-      // In real implementation, you would refresh the balance here
-      // fetchBalance();
-      
+      fetchBalance();
     } catch (error) {
-      alert('Failed to initiate fund transfer. Please try again.');
+      failureToast('Failed to initiate fund transfer. Please try again.');
     } finally {
       setProcessing(false);
     }
   };
 
-  const handleWithdrawSubmit = async (e) => {
-    e.preventDefault();
-    if (!withdrawAmount) {
-      alert('Please enter withdrawal amount');
-      return;
-    }
-
-    const amount = parseFloat(withdrawAmount);
-    if (amount < 100) {
-      alert('Minimum withdrawal amount is ₹100');
-      return;
-    }
-
-    if (amount > balance.availableBalance) {
-      alert('Insufficient available balance for withdrawal');
-      return;
-    }
+  const handleWithdrawSubmit = async ({amount}) => {
 
     setProcessing(true);
     try {
-      // MOCK API - Replace with real API call
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
-      
-      alert(`Successfully initiated withdrawal of ₹${amount.toLocaleString()}. Amount will be transferred to your registered bank account within 1-2 business days.`);
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const { data : {code, message, data}} = await axios.post(`${apiUrl}/api/transactions/withdraw-money`, {
+        user_id: user.user_id,
+        amount: amount,
+      });
+      if(code === 200) {
+        successToast('Money withdrawn successfully');
+      } else {
+        failureToast('Please try again later');
+      }
       setWithdrawModalOpen(false);
       setWithdrawAmount('');
-      
-      // In real implementation, you would refresh the balance here
-      // fetchBalance();
-      
+      fetchBalance();
     } catch (error) {
-      alert('Failed to initiate withdrawal. Please try again.');
+      failureToast('Failed to initiate withdrawal. Please try again.');
     } finally {
       setProcessing(false);
     }
   };
 
   const handleViewPortfolio = () => {
-    // Navigate to investments and scroll to top
     navigate('/investments');
-    // Scroll to top after navigation
     window.scrollTo(0, 0);
   };
 
@@ -226,7 +196,7 @@ const AccountBalancePage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header title="Account Balance" />
-      
+      { balance && (
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="mb-12">
@@ -240,11 +210,11 @@ const AccountBalancePage = () => {
           {/* Total Balance Display */}
           <div className="text-center mb-10">
             <p className="text-gray-500 font-semibold text-lg mb-2">Total Account Value</p>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">₹{balance.totalBalance.toLocaleString()}</h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">₹{(Number(balance.totalBalance) + Number(balance.investedAmount))}</h1>
             <div className="flex items-center justify-center gap-4 text-sm">
-              <span className="text-green-600">+{balance.monthlyGrowth}% this month</span>
+              <span className="text-blue-600">{100*((balance.totalBalance)/(Number(balance.totalBalance) + Number(balance.investedAmount))).toFixed(2)}% ready to invest</span>
               <span className="text-gray-400">|</span>
-              <span className="text-blue-600">+{balance.yearlyGrowth}% this year</span>
+              <span className="text-green-600">{100*((balance.investedAmount)/(Number(balance.totalBalance) + Number(balance.investedAmount))).toFixed(2)}% amount invested</span>
             </div>
           </div>
 
@@ -256,7 +226,7 @@ const AccountBalancePage = () => {
                 <FaArrowUp className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-1">Available Balance</h3>
-              <p className="text-2xl font-bold text-blue-600">₹{balance.availableBalance.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-blue-600">₹{balance?.totalBalance?.toLocaleString()}</p>
               <p className="text-sm text-gray-500 mt-1">Ready to Invest</p>
             </div>
 
@@ -266,7 +236,7 @@ const AccountBalancePage = () => {
                 <FaArrowDown className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-1">Invested Amount</h3>
-              <p className="text-2xl font-bold text-green-600">₹{balance.investedAmount.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-green-600">₹{balance?.investedAmount?.toLocaleString()}</p>
               <p className="text-sm text-gray-500 mt-1">Amount Invested</p>
             </div>
 
@@ -283,7 +253,7 @@ const AccountBalancePage = () => {
             <div className="space-y-2">
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="font-semibold text-gray-800">Account Number</span>
-                <span className="text-gray-800">1111111</span>
+                <span className="text-gray-800">{balance.accountNumber}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100">
                 <span className="font-semibold text-gray-800">Account Type</span>
@@ -364,6 +334,7 @@ const AccountBalancePage = () => {
           </div>
         </div>
       </div>
+      )}
       
       {/* Add Funds Modal */}
       {addFundsModalOpen && (
@@ -372,6 +343,7 @@ const AccountBalancePage = () => {
           onClose={() => setAddFundsModalOpen(false)}
           onSubmit={handleAddFundsSubmit}
           processing={processing}
+          accountNumber={balance.accountNumber}
         />
       )}
       
@@ -383,7 +355,7 @@ const AccountBalancePage = () => {
           onClose={() => setWithdrawModalOpen(false)}
           onSubmit={handleWithdrawSubmit}
           processing={processing}
-          availableBalance={balance.availableBalance}
+          availableBalance={balance.totalBalance}
         />
       )}
       

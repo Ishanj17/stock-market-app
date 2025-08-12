@@ -4,6 +4,9 @@ import Header from '../common/Header';
 import TransactionReceipt from './TransactionReceipt';
 import { SkeletonTable, SkeletonTransactionRow } from '../common/SkeletonLoader';
 import Footer from '../common/Footer';
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import { failureToast } from '../common/toast';
 
 // Mock data for transactions
 const mockTransactions = [
@@ -86,33 +89,37 @@ const mockTransactions = [
 ];
 
 const TransactionHistoryPage = () => {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState('all');
-  const [sortBy, setSortBy] = useState('date');
-  const [sortOrder, setSortOrder] = useState('desc');
+  // const [sortBy, setSortBy] = useState('date');
+  // const [sortOrder, setSortOrder] = useState('desc');
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   useEffect(() => {
-    // MOCK API - Replace with real API call
-    setTimeout(() => {
-      setLoading(false);
-      setTransactions(mockTransactions);
-    }, 1500); // Simulate API delay
-  }, []);
+    if(user) {
+      fetchTransactions();  
+    }
+  }, [user]);
 
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      // Mock API call with timeout
-      setTimeout(() => {
-        setTransactions(mockTransactions);
-        setLoading(false);
-      }, 1000);
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const { data : {code, message, data}} = await axios.post(`${apiUrl}/api/transactions/get-transactions`, {
+        user_id: user.user_id,
+      });
+      console.log(code, message, data, 'code, message, data');
+      if(code === 200) {
+        setTransactions(data);
+      } else {
+        failureToast('Could not fetch transactions. Please try again later.');
+      }
     } catch (error) {
       console.error('Error fetching transactions:', error);
       setError('Failed to fetch transactions');
@@ -120,66 +127,6 @@ const TransactionHistoryPage = () => {
       setLoading(false);
     }
   };
-
-  const filteredTransactions = transactions.filter(transaction => {
-    const matchesFilter = filter === 'all' || transaction.type === filter;
-    const matchesSearch = transaction.stockName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.symbol?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.transactionId.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Date range filtering
-    let matchesDateRange = true;
-    if (dateRange !== 'all') {
-      const transactionDate = new Date(transaction.date);
-      const now = new Date();
-      const diffTime = Math.abs(now - transactionDate);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      switch (dateRange) {
-        case 'today':
-          matchesDateRange = diffDays === 0;
-          break;
-        case 'week':
-          matchesDateRange = diffDays <= 7;
-          break;
-        case 'month':
-          matchesDateRange = diffDays <= 30;
-          break;
-        default:
-          matchesDateRange = true;
-      }
-    }
-    
-    return matchesFilter && matchesSearch && matchesDateRange;
-  });
-
-  const sortedTransactions = [...filteredTransactions].sort((a, b) => {
-    let aValue, bValue;
-    
-    switch (sortBy) {
-      case 'date':
-        aValue = new Date(a.date);
-        bValue = new Date(b.date);
-        break;
-      case 'amount':
-        aValue = a.totalAmount || a.amount;
-        bValue = b.totalAmount || b.amount;
-        break;
-      case 'type':
-        aValue = a.type;
-        bValue = b.type;
-        break;
-      default:
-        aValue = new Date(a.date);
-        bValue = new Date(b.date);
-    }
-    
-    if (sortOrder === 'asc') {
-      return aValue > bValue ? 1 : -1;
-    } else {
-      return aValue < bValue ? 1 : -1;
-    }
-  });
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -193,10 +140,10 @@ const TransactionHistoryPage = () => {
 
   const getTransactionIcon = (type) => {
     switch (type) {
-      case 'BUY': return '💰';
+      case 'BUY': return '📊';
       case 'SELL': return '📉';
-      case 'DEPOSIT': return '💰';
-      case 'WITHDRAWAL': return '💸';
+      case 'ADD': return '💰';
+      case 'WITHDRAW': return '💸';
       default: return '📊';
     }
   };
@@ -205,8 +152,8 @@ const TransactionHistoryPage = () => {
     switch (type) {
       case 'BUY': return 'text-green-600';
       case 'SELL': return 'text-red-600';
-      case 'DEPOSIT': return 'text-blue-600';
-      case 'WITHDRAWAL': return 'text-orange-600';
+      case 'ADD': return 'text-blue-600';
+      case 'WITHDRAW': return 'text-orange-600';
       default: return 'text-gray-600';
     }
   };
@@ -322,7 +269,7 @@ Thank you for using Stock Market App!
     ];
 
     // CSV data rows
-    const csvData = sortedTransactions.map(transaction => [
+    const csvData = transactions.map(transaction => [
       transaction.transactionId,
       transaction.type,
       transaction.stockName || '',
@@ -353,9 +300,20 @@ Thank you for using Stock Market App!
     window.URL.revokeObjectURL(url);
   };
 
-  const totalTransactions = sortedTransactions.length;
-  const totalAmount = sortedTransactions.reduce((sum, t) => sum + (t.totalAmount || t.amount), 0);
-  const totalFees = sortedTransactions.reduce((sum, t) => sum + t.fees, 0);
+  let totalAmount = 0;
+
+  transactions.forEach(txn => {
+    const price = parseFloat(txn.price_per_share);
+    const qty = txn.quantity;
+  
+    const amount = price * qty;
+  
+    if (txn.transaction_type === 'BUY' || txn.transaction_type === 'ADD') {
+      totalAmount += amount;
+    } else if (txn.transaction_type === 'SELL' || txn.transaction_type === 'WITHDRAW') {
+      totalAmount -= amount;
+    }
+  });
 
   if (loading) {
     return (
@@ -421,7 +379,7 @@ Thank you for using Stock Market App!
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-500">Total Transactions</p>
-                <p className="text-xl font-bold text-gray-900">{totalTransactions}</p>
+                <p className="text-xl font-bold text-gray-900">{transactions.length}</p>
               </div>
             </div>
           </div>
@@ -433,7 +391,11 @@ Thank you for using Stock Market App!
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-500">Total Amount</p>
-                <p className="text-2xl font-bold text-gray-900">₹{totalAmount.toLocaleString()}</p>
+                {totalAmount > 0 ? (
+                  <p className="text-2xl font-bold text-green-500">₹{totalAmount.toLocaleString()}</p>
+                ) : (
+                  <p className="text-2xl font-bold text-red-500">₹{totalAmount.toLocaleString()}</p>
+                )}
               </div>
             </div>
           </div>
@@ -467,51 +429,6 @@ Thank you for using Stock Market App!
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
               />
             </div>
-
-            {/* Filter by Type */}
-            {/* <div className="flex items-center gap-2">
-              <FaFilter className="text-gray-400" />
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
-              >
-                <option value="all">All Types</option>
-                <option value="BUY">Buy</option>
-                <option value="SELL">Sell</option>
-                <option value="DEPOSIT">Deposit</option>
-                <option value="WITHDRAWAL">Withdrawal</option>
-              </select>
-            </div> */}
-
-            {/* Date Range */}
-            {/* <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
-            >
-              <option value="all">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-            </select> */}
-
-            {/* Sort */}
-            {/* <select
-              value={`${sortBy}-${sortOrder}`}
-              onChange={(e) => {
-                const [field, order] = e.target.value.split('-');
-                setSortBy(field);
-                setSortOrder(order);
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-300"
-            >
-              <option value="date-desc">Newest First</option>
-              <option value="date-asc">Oldest First</option>
-              <option value="amount-desc">Amount High to Low</option>
-              <option value="amount-asc">Amount Low to High</option>
-              <option value="type-asc">Type A-Z</option>
-            </select> */}
           </div>
         </div>
 
@@ -521,57 +438,50 @@ Thank you for using Stock Market App!
             <table className="w-full">
               <thead className="">
                 <tr>
+                  <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Transaction ID</th>
                   <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Transaction</th>
-                  <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Details</th>
                   <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Amount</th>
-                  <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Fees</th>
                   <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Status</th>
                   <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Date</th>
                   <th className="px-6 py-6 text-left text-sm font-medium text-gray-600 font-semibold tracking-wider">Receipt</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {sortedTransactions.map((transaction) => (
+                {transactions.map((transaction) => (
                   <tr key={transaction.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {transaction.transaction_id}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">{getTransactionIcon(transaction.type)}</span>
+                        <span className="text-2xl">{getTransactionIcon(transaction.transaction_type)}</span>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{transaction.type}</p>
-                          <p className="text-xs text-gray-500">{transaction.transactionId}</p>
+                          <p className="text-sm font-medium text-gray-900">{transaction.transaction_type}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {transaction.stockName || transaction.type}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {transaction.symbol && `${transaction.symbol} • ${transaction.quantity} shares`}
-                          {!transaction.symbol && transaction.exchange}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className={`text-sm font-semibold ${getTransactionColor(transaction.type)}`}>
-                        {transaction.type === 'BUY' || transaction.type === 'DEPOSIT' ? '+' : '-'}
-                        ₹{(transaction.totalAmount || transaction.amount).toLocaleString()}
+                      <p className={`text-sm font-semibold ${getTransactionColor(transaction.transaction_type)}`}>
+                        {transaction.transaction_type === 'BUY' || transaction.transaction_type === 'ADD' ? '+' : '-'}
+                        ₹{(Number(transaction.price_per_share)*Number(transaction.quantity)).toLocaleString()}
                       </p>
-                      {transaction.symbol && (
-                        <p className="text-xs text-gray-500">@ ₹{transaction.price}</p>
+                      {transaction.transaction_type === 'BUY' || transaction.transaction_type === 'SELL' ? (
+                        <p className="text-xs text-gray-500">@ ₹{transaction.price_per_share}</p>
+                      ) : (
+                        <></>
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-gray-900">₹{transaction.fees.toFixed(2)}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(transaction.status)}`}>
-                        {transaction.status}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor('COMPLETED')}`}>
+                        {'Completed'}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-gray-900">{formatDate(transaction.date)}</p>
+                      <p className="text-sm text-gray-900">{formatDate(transaction.transaction_date)}</p>
                     </td>
                     <td className="px-6 py-4">
                       <button 
@@ -589,7 +499,7 @@ Thank you for using Stock Market App!
             </table>
           </div>
           
-          {sortedTransactions.length === 0 && (
+          {transactions.length === 0 && (
             <div className="p-8 text-center">
               <div className="text-6xl mb-4">📊</div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">No transactions found</h3>

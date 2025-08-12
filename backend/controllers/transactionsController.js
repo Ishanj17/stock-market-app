@@ -251,7 +251,7 @@ const transactionsController = {
 		console.log(balanceHistory, 'balanceHistory');
 		if(balanceHistory.length === 0) {
 			return res.json({
-				code: 200,
+				code: 400,
 				message: 'No balance history found!',
 				data: []
 			});
