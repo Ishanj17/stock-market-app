@@ -182,7 +182,7 @@ const Watchlist = () => {
                             onClick={() => handleRemoveFromWatchlist(stock.name)}
                             className="text-red-600 hover:text-red-900"
                           >
-                            <FaTrash className="w-2 h-2" />
+                            <FaTrash className="w-3 h-3" />
                           </button>
                         </div>
                       </td>

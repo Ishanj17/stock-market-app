@@ -1,4 +1,13 @@
-const { checkBalance, addStockToPortfolio, updateBalance, checkStockInPortfolio, updatePortfolio, updateTransactions, addWithdrawBalance } = require('../models/transactions');
+const { checkBalance,
+	 addStockToPortfolio,
+	 updateBalance,
+	 checkStockInPortfolio,
+	 updatePortfolio,
+	 updateTransactions,
+	 addWithdrawBalance,
+	 getInvestments,
+	 getCurrentBalance,
+	 getTransactions } = require('../models/transactions');
 
 const transactionsController = {
 
@@ -39,7 +48,7 @@ const transactionsController = {
 			console.log(stock, 'stockaa');
 			if(stock.length === 0) {
 				// add new row
-				const newStock = await addStockToPortfolio(user_id, stock_name, quantity, price);
+				const newStock = await addStockToPortfolio(user_id, stock_name, quantity, price, price*quantity);
 				console.log(newStock, 'addd');
 				if(newStock === 0) {
 						return res.json({
@@ -50,7 +59,7 @@ const transactionsController = {
 				}
 			} else {
 				// update existing row
-				const updatedStock = await updatePortfolio(user_id, stock_name, quantity, price, 'BUY');
+				const updatedStock = await updatePortfolio(user_id, stock_name, quantity, price, price*quantity, 'BUY');
 				console.log(updatedStock, 'updatedStock');
 				if(updatedStock === 0) {
 					return res.json({	
@@ -116,7 +125,7 @@ const transactionsController = {
 					});
 			}
 			// update portfolio
-			const updatedPortfolio = await updatePortfolio(user_id, stock_name, quantity, price, 'SELL');
+			const updatedPortfolio = await updatePortfolio(user_id, stock_name, quantity, price, price*quantity, 'SELL');
 			console.log(updatedPortfolio, 'updatedPortfolio');
 			if(updatedPortfolio === 0) {
 					// give error in api
@@ -190,7 +199,7 @@ const transactionsController = {
 		});
 	},
 
- async withdrawMoney(req, res) {
+ 	async withdrawMoney(req, res) {
 		const {user_id, amount} = req.body;
 		const updatedBalance = await addWithdrawBalance(user_id, amount, 'WITHDRAW');
 		if(updatedBalance === 0) {
@@ -216,8 +225,61 @@ const transactionsController = {
 			amount: amount
 		}
 		});
-	}
+	},
 
+	async getInvestments(req, res) {
+		const {user_id} = req.body;
+		const investments = await getInvestments(user_id);
+		console.log(investments, 'investments');
+		if(investments.length === 0) {
+			return res.json({
+				code: 200,
+				message: 'No investments found!',
+				data: []
+			});
+		}
+		return res.json({
+			code: 200,
+			message: 'All investments fetched successfully!',
+			data: investments
+		});
+	}, 
+
+	async getCurrentBalance(req, res) {
+		const {user_id} = req.body;
+		const balanceHistory = await getCurrentBalance(user_id);
+		console.log(balanceHistory, 'balanceHistory');
+		if(balanceHistory.length === 0) {
+			return res.json({
+				code: 200,
+				message: 'No balance history found!',
+				data: []
+			});
+		}
+		return res.json({
+			code: 200,
+			message: 'Balance history fetched successfully!',
+			data: balanceHistory
+		});
+	},
+
+	async getTransactions(req, res) {
+		const {user_id} = req.body;
+		const transactions = await getTransactions(user_id);
+		console.log(transactions, 'transactions');
+		if(transactions.length === 0) {
+			return res.json({
+				code: 200,
+				message: 'No transactions found!',
+				data: []
+			});
+		}
+		return res.json({
+			code: 200,
+			message: 'Transactions fetched successfully!',
+			data: transactions
+		});
+	}
 }
 
 module.exports = transactionsController;

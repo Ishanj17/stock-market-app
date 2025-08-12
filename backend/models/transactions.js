@@ -7,9 +7,9 @@ const checkBalance = async (user_id) => {
     return result.rows || [];
 }
 
-const addStockToPortfolio = async (user_id, stock_name, quantity, price) => {
-    const query = `INSERT INTO portfolio (user_id, stock_name, quantity, price_per_share) VALUES ($1, $2, $3, $4)`;
-    const result = await pool.query(query, [user_id, stock_name, quantity, price]);
+const addStockToPortfolio = async (user_id, stock_name, quantity, price, invested_amount) => {
+    const query = `INSERT INTO portfolio (user_id, stock_name, quantity, price_per_share, invested_amount) VALUES ($1, $2, $3, $4, $5)`;
+    const result = await pool.query(query, [user_id, stock_name, quantity, price, invested_amount]);
     console.log(result, 'result');
     return result.rowCount;
 }
@@ -62,25 +62,59 @@ const checkStockInPortfolio = async (user_id, stock_name) => {
     return result.rows;
 }
 
-const updatePortfolio = async (user_id, stock_name, quantity, price, type) => {
+const updatePortfolio = async (user_id, stock_name, quantity, price, invested_amount, type) => {
     let query = '';
     let result = [];
     if(type === 'BUY') {
         query = `UPDATE portfolio
         SET quantity = quantity + $1,
-        price_per_share = ((quantity * price_per_share) + ($1 * $2)) / (quantity + $1) 
+        price_per_share = ((quantity * price_per_share) + ($1 * $2)) / (quantity + $1),
+        invested_amount = invested_amount + $5
         WHERE user_id = $3 AND stock_name = $4
         RETURNING *`;
-        result = await pool.query(query, [quantity, price, user_id, stock_name]);
+        result = await pool.query(query, [quantity, price, user_id, stock_name, invested_amount]);
     } else if(type === 'SELL') {
         query = `UPDATE portfolio
-        SET quantity = quantity - $1 
+        SET quantity = quantity - $1,
+        invested_amount = (quantity - $1) * price_per_share
         WHERE user_id = $2 AND stock_name = $3
         RETURNING *`;
-        result = await pool.query(query, [quantity, user_id, stock_name]);
+        result = await pool.query(query, [quantity, user_id, stock_name, invested_amount]);
     }
     console.log(result, 'result');
     return result.rowCount;
 }
 
-module.exports = { checkBalance, addStockToPortfolio, updateBalance, updateTransactions, checkStockInPortfolio, updatePortfolio, addWithdrawBalance };
+const getInvestments = async (user_id) => {
+    const query = `SELECT * FROM portfolio WHERE user_id = $1`;
+    const result = await pool.query(query, [user_id]);
+    console.log(result, 'result');
+    return result.rows;
+}
+
+const getCurrentBalance = async (user_id) => {
+    const query = `SELECT * FROM balance_details WHERE user_id = $1`;
+    const result = await pool.query(query, [user_id]);
+    console.log(result, 'result');
+    return result.rows;
+}
+
+const getTransactions = async (user_id) => {
+    const query = `SELECT * FROM transactions WHERE user_id = $1`;
+    const result = await pool.query(query, [user_id]);
+    console.log(result, 'result');
+    return result.rows;
+}
+
+module.exports = { 
+    checkBalance, 
+    addStockToPortfolio, 
+    updateBalance, 
+    updateTransactions, 
+    checkStockInPortfolio, 
+    updatePortfolio, 
+    addWithdrawBalance, 
+    getInvestments, 
+    getCurrentBalance, 
+    getTransactions 
+};

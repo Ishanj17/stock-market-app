@@ -30,11 +30,8 @@ const Dashboard = () => {
       const fetchNews = async () => {
         setLoading(true);
         try {
-          // MOCK API - Replace with real API call
-          await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
-          
           const res = await axios.get(`${API_BASE_URL}/api/news`);
-          setNews(res.data);
+          return res.data;
         } catch (error) {
           console.error('Error fetching news:', error);
           setError('Failed to fetch news');
