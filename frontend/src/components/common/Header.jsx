@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { FaUser, FaSignOutAlt, FaShoppingCart, FaEye, FaWallet, FaHistory } from 'react-icons/fa';
+import { FaUser, FaSignOutAlt, FaShoppingCart, FaEye, FaWallet, FaHistory, FaCreditCard } from 'react-icons/fa';
 import LoginModal from '../auth/LoginModal';
+import BankAccountModal from './BankAccountModal';
 import { useAuth } from '../../context/AuthContext';
 
 const Header = ({ title, showBack = false, onBack }) => {
@@ -10,6 +11,7 @@ const Header = ({ title, showBack = false, onBack }) => {
   const { user, isAuthenticated, logout } = useAuth();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [isBankAccountModalOpen, setIsBankAccountModalOpen] = useState(false);
   const userMenuRef = useRef(null);
 
   const handleLogoClick = () => {
@@ -62,6 +64,14 @@ const Header = ({ title, showBack = false, onBack }) => {
     logout();
     setShowUserMenu(false);
     navigate('/');
+  };
+
+  const handleBankAccountSubmit = (bankData) => {
+    // For now, just log the data - this will be connected to backend later
+    console.log('Bank account data:', bankData);
+    // TODO: Send to backend API
+    // After successful submission, the user will have a bank account
+    // and this option won't be shown again
   };
 
   const getUserInitial = () => {
@@ -223,6 +233,20 @@ const Header = ({ title, showBack = false, onBack }) => {
                   </p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
+                {/* Bank Account Option - Only show if user doesn't have one */}
+                {!user?.hasBankAccount && (
+                  <button
+                    onClick={() => {
+                      setIsBankAccountModalOpen(true);
+                      setShowUserMenu(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <FaCreditCard className="w-4 h-4" />
+                    Add Bank Account
+                  </button>
+                )}
+                
                 <button
                   onClick={handleLogout}
                   className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
@@ -245,6 +269,10 @@ const Header = ({ title, showBack = false, onBack }) => {
       </div>
 
       <LoginModal isOpen={isLoginModalOpen} onClosing={() => setIsLoginModalOpen(false)} />
+      <BankAccountModal 
+        isOpen={isBankAccountModalOpen} 
+        onClose={() => setIsBankAccountModalOpen(false)}
+      />
     </div>
   );
 };

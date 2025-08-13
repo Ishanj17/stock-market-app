@@ -7,7 +7,8 @@ const { checkBalance,
 	 addWithdrawBalance,
 	 getInvestments,
 	 getCurrentBalance,
-	 getTransactions } = require('../models/transactions');
+	 getTransactions,
+	 addBankAccount } = require('../models/transactions');
 
 const transactionsController = {
 
@@ -279,7 +280,24 @@ const transactionsController = {
 			message: 'Transactions fetched successfully!',
 			data: transactions
 		});
-	}
+	},
+
+	async addBankAccount(req, res) {
+		const {user_id, account_number} = req.body;
+		const bankAccount = await addBankAccount(user_id, account_number);
+		if(bankAccount === 0) {
+			return res.json({
+				code: 400,
+				message: 'Internal Server Error!',
+				data: []
+			});
+		}
+		return res.json({
+			code: 200,
+			message: 'Bank account added successfully!',
+			data: bankAccount
+		});
+	}	
 }
 
 module.exports = transactionsController;

@@ -23,5 +23,8 @@ router.post('/get-current-balance', transactionsController.getCurrentBalance);
 // POST /api/transactions/get-transactions
 router.post('/get-transactions', transactionsController.getTransactions);
 
+// POST /api/transactions/add-bank-account
+router.post('/add-bank-account', transactionsController.addBankAccount);
+
 module.exports = router;
 

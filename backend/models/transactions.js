@@ -106,6 +106,13 @@ const getTransactions = async (user_id) => {
     return result.rows;
 }
 
+const addBankAccount = async (user_id, account_number) => {
+    const query = `INSERT INTO balance_details (user_id, bank_account_number, total_balance, invested_amount) VALUES ($1, $2, $3, $4)`;
+    const result = await pool.query(query, [user_id, account_number, 1000, 0]);
+    // console.log(result, 'result');
+    return result.rowCount;
+}
+
 module.exports = { 
     checkBalance, 
     addStockToPortfolio, 
@@ -116,5 +123,6 @@ module.exports = {
     addWithdrawBalance, 
     getInvestments, 
     getCurrentBalance, 
-    getTransactions 
+    getTransactions,
+    addBankAccount
 };
