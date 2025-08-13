@@ -56,7 +56,7 @@ const updateTransactions = async (user_id, stock_name, quantity, price, type) =>
 }
 
 const checkStockInPortfolio = async (user_id, stock_name) => {
-    const query = `SELECT * FROM portfolio WHERE user_id = $1 AND stock_name = $2`;
+    const query = `SELECT * FROM portfolio WHERE user_id = $1 AND stock_name = $2 AND quantity > 0`;
     const result = await pool.query(query, [user_id, stock_name]);
     // console.log(result, 'result');
     return result.rows;

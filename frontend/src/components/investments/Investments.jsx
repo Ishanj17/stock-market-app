@@ -8,9 +8,14 @@ import Modal from '../common/Modal';
 import { SkeletonTable, SkeletonInvestmentRow } from '../common/SkeletonLoader';
 import { FaTimes, FaDollarSign } from 'react-icons/fa';
 import SellInvestmentModal from './SellInvestmentModal';
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
+import { failureToast } from '../common/toast';
+import { successToast } from '../common/toast';
 
 const Investments = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [investments, setInvestments] = useState([]);
@@ -18,96 +23,56 @@ const Investments = () => {
   const [selectedInvestment, setSelectedInvestment] = useState(null);
   const [sellQuantity, setSellQuantity] = useState(1);
   const [sellLoading, setSellLoading] = useState(false);
+  const [stockCurrentDetails, setStockCurrentDetails] = useState([]);
 
   useEffect(() => {
-    fetchInvestments();
-  }, []);
+    if(user) {
+      fetchInvestments();
+    }
+  }, [user]);
 
   const fetchInvestments = async () => {
     try {
       setLoading(true);
-      
-      // Check if user is authenticated
       const token = localStorage.getItem('authToken');
       if (!token) {
         setError('Please login to view your investments');
         return;
       }
-
-      // MOCK API - Replace with real API call
-      // TODO: Replace with actual API calls for user investments
-      // For now, using mock data that simulates API response
       const apiUrl = process.env.REACT_APP_API_URL;
-      
+      const updatedDetails = [];
       try {
-        // Simulate API call - in real implementation, this would be:
-        // const response = await fetch(`${apiUrl}/api/investments/user-portfolio`, {
-        //   headers: { 'Authorization': `Bearer ${token}` }
-        // });
-        // const data = await response.json();
-        
-        // Mock API response
-        const mockInvestments = [
-          {
-            id: 1,
-            type: 'Stock',
-            name: 'Reliance Industries Ltd.',
-            symbol: 'RELIANCE',
-            quantity: 10,
-            avgPrice: 2500.00,
-            currentPrice: 2750.00,
-            totalValue: 27500.00,
-            profitLoss: 2500.00,
-            profitLossPercentage: 10.0
-          },
-          {
-            id: 2,
-            type: 'Mutual Fund',
-            name: 'HDFC Mid-Cap Opportunities Fund',
-            symbol: 'HDFCMID',
-            quantity: 50,
-            avgPrice: 45.00,
-            currentPrice: 47.25,
-            totalValue: 2362.50,
-            profitLoss: 112.50,
-            profitLossPercentage: 5.0
-          },
-          {
-            id: 3,
-            type: 'Stock',
-            name: 'TCS Ltd.',
-            symbol: 'TCS',
-            quantity: 5,
-            avgPrice: 3800.00,
-            currentPrice: 3990.00,
-            totalValue: 19950.00,
-            profitLoss: 950.00,
-            profitLossPercentage: 5.0
-          }
-        ];
-        
-        setInvestments(mockInvestments);
+        const {data : {code, message, data}} = await axios.post(`${apiUrl}/api/transactions/get-investments`, {
+          user_id: user.user_id
+        });
+        console.log(code, message, data, 'investments data', user.user_id);
+        if(code === 200) {
+          const updatedDetails = await Promise.all(
+            data.map(async (investment) => {
+              const stockIdentifier = investment.stock_name.split(' ').slice(0, -1).join(' ');
+              try {
+                const { data: { price: { NSE } } } = await axios.get(
+                  `${apiUrl}/api/stocks/detail?name=${stockIdentifier}`
+                );
+                return { stock_name: investment.stock_name, current_price: NSE };
+              } catch (err) {
+                return { stock_name: investment.stock_name, current_price: null };
+              }
+            })
+          );
+          setInvestments(data);
+          console.log(updatedDetails, 'updated details');
+          setStockCurrentDetails(updatedDetails);
+        } else {
+          setError(message);
+        }
       } catch (apiError) {
         console.error('API Error:', apiError);
-        // Fallback to mock data if API fails
-        const fallbackInvestments = [
-          {
-            id: 1,
-            type: 'Stock',
-            name: 'Reliance Industries Ltd.',
-            symbol: 'RELIANCE',
-            quantity: 10,
-            avgPrice: 2500.00,
-            currentPrice: 2750.00,
-            totalValue: 27500.00,
-            profitLoss: 2500.00,
-            profitLossPercentage: 10.0
-          }
-        ];
-        setInvestments(fallbackInvestments);
+        setError('Failed to load investmentms');
       }
-    } catch (err) {
-      setError('Failed to load investments');
+    } catch (error) {
+      console.error('Error fetching investments:', error);
+      setError('Failed to load investmentsmm');
     } finally {
       setLoading(false);
     }
@@ -127,33 +92,33 @@ const Investments = () => {
     setSellModalOpen(true);
   };
 
-  const handleSellConfirm = async () => {
+  const handleSellConfirm = async (currentPrice) => {
     if (!selectedInvestment || sellQuantity <= 0) return;
     
     setSellLoading(true);
     try {
-      // MOCK API - Replace with real API call
-      // Mock API call for selling investment
-      // TODO: Replace with actual API call when backend is ready
-      setSellModalOpen(false);
+      const apiUrl = process.env.REACT_APP_API_URL;
       setLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
-      
-      // Mock successful sale
-      console.log(`Sold ${sellQuantity} units of ${selectedInvestment.name}`);
-      
-      // Close modal and show success message
-      
+      const {data : {code, message, data}} = await axios.post(`${apiUrl}/api/transactions/sell-stock`, {
+        user_id: user.user_id,
+        stock_name: selectedInvestment.stock_name,
+        quantity: sellQuantity,
+        price: currentPrice
+      });
+      console.log(code, message, data, 'sell investment data', user.user_id);
+      if(code === 200) {
+        successToast('Investment sold successfully');
+      } else {
+        failureToast('Please try again');
+      } 
+      setSellModalOpen(false);
       setSelectedInvestment(null);
+      fetchInvestments();
       setLoading(false);
-      // alert(`Successfully sold ${sellQuantity} units of ${selectedInvestment.name}`);
-      
-      // In real implementation, you would refresh the investments list here
-      // fetchInvestments();
-      
     } catch (error) {
       console.error('Error selling investment:', error);
-      alert('Failed to sell investment. Please try again.');
+      failureToast('Please try again');
+      setLoading(false);
     } finally {
       setSellLoading(false);
     }
@@ -171,7 +136,7 @@ const Investments = () => {
 
   const handleStockClick = (stock) => {
     // Navigate to stock details page using the most appropriate identifier
-    const stockIdentifier = stock.company_name || stock.displayName || stock.company;
+    const stockIdentifier = stock.stock_name.split(' ').slice(0, -1).join(' ');
     navigate(`/stocks/detail/${stockIdentifier}`);
   };
 
@@ -192,6 +157,15 @@ const Investments = () => {
   }
   if (error) return <ErrorMessage message={error} onRetry={fetchInvestments} />;
 
+  const totalValue = investments.reduce((acc, investment) => acc + Number(investment.price_per_share) * Number(investment.quantity), 0);
+  const totalProfitLoss = investments.reduce((acc, investment, index) => {
+    const current = Number(stockCurrentDetails[index]?.current_price) || 0;
+    const bought = Number(investment.price_per_share) || 0;
+    return acc + (current - bought) * investment.quantity;
+  }, 0);
+  const totalProfitLossPercentage = (totalProfitLoss / totalValue) * 100; 
+
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -210,15 +184,21 @@ const Investments = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-1">Total Value</p>
-              <p className="text-2xl font-semibold text-gray-800">$6,855.00</p>
+              <p className="text-2xl font-semibold text-gray-800">
+                ₹{totalValue.toFixed(2)}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-1">Total P&L</p>
-              <p className="text-2xl font-bold text-green-600">+$855.00</p>
+              <p className="text-2xl font-bold text-green-600">
+                ₹{totalProfitLoss.toFixed(2)}
+              </p>
             </div>
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-1">Total P&L %</p>
-              <p className="text-2xl font-bold text-green-600">+14.2%</p>
+              <p className="text-2xl font-bold text-green-600">
+                {totalProfitLossPercentage.toFixed(2)}%
+              </p>
             </div>
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-1">Holdings</p>
@@ -265,7 +245,7 @@ const Investments = () => {
                       Quantity
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
-                      Avg Price
+                      Price per share(avg)
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                       Current Price
@@ -282,14 +262,14 @@ const Investments = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {investments.map((investment) => (
+                  {investments.map((investment, index) => (
                     <tr key={investment.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10">
                             <div className="h-10 w-10 rounded-full bg-gradient-to-r from-teal-500 to-green-500 flex items-center justify-center">
                               <span className="text-white font-bold text-sm">
-                                {investment.name.charAt(0)}
+                                {investment.stock_name.charAt(0)}
                               </span>
                             </div>
                           </div>
@@ -298,7 +278,7 @@ const Investments = () => {
                               onClick={() => handleStockClick(investment)}
                               className="text-sm font-medium font-semibold text-gray-700 hover:text-teal-600 cursor-pointer transition-colors duration-200 hover:underline"
                               >
-                              {investment.name}
+                              {investment.stock_name}
                             </button>
                           </div>
                         </div>
@@ -307,18 +287,25 @@ const Investments = () => {
                         {investment.quantity}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ₹{investment.avgPrice.toFixed(2)}
+                        ₹{Number(investment.price_per_share).toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ₹{investment.currentPrice.toFixed(2)}
+                        {stockCurrentDetails[index]?.current_price}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ₹{investment.totalValue.toFixed(2)}
+                        ₹{(Number(investment.price_per_share) * Number(investment.quantity)).toFixed(2)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className={`text-sm font-medium ${getProfitLossColor(investment.profitLoss)}`}>
-                          <span className="mr-1">{getProfitLossIcon(investment.profitLoss)}</span>
-                          ₹{investment.profitLoss.toFixed(2)} ({investment.profitLossPercentage.toFixed(1)}%)
+                        <div
+                          className={`text-sm font-medium ${
+                          ((Number(stockCurrentDetails[index]?.current_price) - Number(investment.price_per_share))
+                            / Number(investment.price_per_share) * 100) > 0
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        }`}
+                        >
+                        {((Number(stockCurrentDetails[index]?.current_price) - Number(investment.price_per_share))
+                          / Number(investment.price_per_share) * 100).toFixed(2)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

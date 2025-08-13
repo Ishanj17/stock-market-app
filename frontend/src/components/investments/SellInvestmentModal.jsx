@@ -1,6 +1,8 @@
 import React from "react";
 import { FaTimes, FaChartLine } from "react-icons/fa";
 import Modal from "../common/Modal";
+import axios from "axios";
+import { useState, useEffect } from "react";
 
 export default function SellInvestmentModal({
   isOpen,
@@ -9,11 +11,25 @@ export default function SellInvestmentModal({
   sellQuantity,
   setSellQuantity,
   onConfirm,
-  loading,
+  loading
 }) {
-  if (!isOpen || !investment) return null;
+  const [currentPrice, setCurrentPrice] = useState(null);
 
-  const estimatedProceeds = sellQuantity * investment.currentPrice;
+  useEffect(() => {
+    const fetchCurrentPrice = async (stockName) => {
+      const stockIdentifier = stockName.split(' ').slice(0, -1).join(' ');
+      const apiUrl = process.env.REACT_APP_API_URL;
+      const { data: { price: { NSE } } } = await axios.get(`${apiUrl}/api/stocks/detail?name=${stockIdentifier}`);
+      setCurrentPrice(NSE);
+    }
+    fetchCurrentPrice(investment.stock_name);
+  }, []);
+
+  const estimatedProceeds = sellQuantity * Number(currentPrice);
+
+  const handleSell = (currentPrice) => {
+    onConfirm(currentPrice);
+  }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -107,15 +123,13 @@ export default function SellInvestmentModal({
                 <div className="bg-gray-50 rounded-lg p-4 mb-4">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-semibold text-gray-500">Stock:</span>
-                    <span className="font-semibold text-gray-600">{investment.name}</span>
-                  </div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm font-semibold text-gray-500">Symbol:</span>
-                    <span className="font-semibold text-gray-600">{investment.symbol}</span>
+                    <span className="font-semibold text-gray-600">{investment.stock_name}</span>
                   </div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-semibold text-gray-500">Current Price:</span>
-                    <span className="font-semibold text-gray-600">₹{investment.currentPrice.toFixed(2)}</span>
+                    <span className={`font-semibold text-gray-600 ${currentPrice ? 'text-green-600' : 'text-red-600'}`}>
+                      {currentPrice ? `₹${Number(currentPrice).toFixed(2)}` : 'Loading...'}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-semibold text-gray-500">Available:</span>
@@ -174,8 +188,8 @@ export default function SellInvestmentModal({
 
                 {/* Sell Button */}
                 <button
-                  onClick={onConfirm}
-                  disabled={loading}
+                  onClick={() => handleSell(currentPrice)}
+                  disabled={loading || currentPrice === null}
                   style={{
                     backgroundColor: '#FF6B6B',
                   }}

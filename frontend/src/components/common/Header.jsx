@@ -244,7 +244,7 @@ const Header = ({ title, showBack = false, onBack }) => {
         )}
       </div>
 
-      <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+      <LoginModal isOpen={isLoginModalOpen} onClosing={() => setIsLoginModalOpen(false)} />
     </div>
   );
 };

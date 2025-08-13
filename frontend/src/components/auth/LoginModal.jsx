@@ -5,8 +5,9 @@ import Modal from '../common/Modal';
 import { FaGoogle, FaTimes, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import './auth.css';
+import { failureToast, successToast } from '../common/toast';
 
-const AuthModal = ({ isOpen, onClose }) => {
+const LoginModal = ({ isOpen, onClosing }) => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [step, setStep] = useState('email');
@@ -56,7 +57,7 @@ const AuthModal = ({ isOpen, onClose }) => {
         setStep(data.exists ? 'password' : 'signup');
       } catch (error) {
         console.error('Error checking user:', error);
-        alert('Error checking email. Please try again.');
+        failureToast('Error checking email. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -65,7 +66,7 @@ const AuthModal = ({ isOpen, onClose }) => {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      alert('Please enter both email and password');
+      failureToast('Please enter both email and password');
       return;
     }
     
@@ -88,14 +89,14 @@ const AuthModal = ({ isOpen, onClose }) => {
           user_id: data.user_id,
         };
         login(userData, data.token);
-        
+        successToast('Login successful');
         // Close modal and redirect to dashboard
-        onClose();
-        navigate('/');
+        onClosing();
+        setTimeout(() => navigate('/'), 200);
       } else {
         // Handle login error
         console.error('Login failed:', data.message || 'Login failed');
-        alert(data.message || 'Login failed. Please try again.');
+        failureToast('Login failed. Please try again.');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -106,18 +107,17 @@ const AuthModal = ({ isOpen, onClose }) => {
 
   const handleSignUp = async () => {
     if (!name.trim() || !email || !password || !confirmPassword) {
-      alert('Please fill in all fields');
+      failureToast('Please fill in all fields');
       return;
     }
     
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      failureToast('Passwords do not match');
       return;
     }
     
     setLoading(true);
     try {
-      // MOCK API - Replace with real API call
       const apiUrl = process.env.REACT_APP_API_URL;
       const response = await fetch(`${apiUrl}/api/user/sign-up`, {
         method: 'POST',
@@ -130,7 +130,7 @@ const AuthModal = ({ isOpen, onClose }) => {
       });
       const data = await response.json();
       
-      if (data.success && data.token) {
+      if (data.created && data.token) {
         // Store user data and token
         const userData = {
           email: email,
@@ -138,26 +138,19 @@ const AuthModal = ({ isOpen, onClose }) => {
           user_id: data.user_id,
         };
         login(userData, data.token);
-        
-        // Close modal and redirect to dashboard
-        onClose();
-        navigate('/');
+        successToast('Signup successful');
+        onClosing();
+        setTimeout(() => navigate('/'), 200);
       } else {
-        // Handle signup error
         console.error('Signup failed:', data.message || 'Signup failed');
-        alert(data.message || 'Signup failed. Please try again.');
+        failureToast('Signup failed. Please try again.');
       }
     } catch (error) {
       console.error('Signup error:', error);
-      alert('Error creating account. Please try again.');
+      failureToast('Error creating account. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogleAuth = () => {
-    // TODO: Implement Google OAuth
-    console.log('Google auth clicked');
   };
 
   const resetForm = () => {
@@ -170,7 +163,7 @@ const AuthModal = ({ isOpen, onClose }) => {
 
   const handleClose = () => {
     resetForm();
-    onClose();
+    onClosing();
   };
 
   return (
@@ -532,4 +525,4 @@ const AuthModal = ({ isOpen, onClose }) => {
   );
 };
 
-export default AuthModal;
+export default LoginModal;
