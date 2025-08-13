@@ -466,7 +466,6 @@ Thank you for using Stock Market App!
                     </td>
                     <td className="px-6 py-4">
                       <p className={`text-sm font-semibold ${getTransactionColor(transaction.transaction_type)}`}>
-                        {transaction.transaction_type === 'BUY' || transaction.transaction_type === 'ADD' ? '+' : '-'}
                         ₹{(Number(transaction.price_per_share)*Number(transaction.quantity)).toLocaleString()}
                       </p>
                       {transaction.transaction_type === 'BUY' || transaction.transaction_type === 'SELL' ? (

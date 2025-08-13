@@ -79,9 +79,9 @@ const updatePortfolio = async (user_id, stock_name, quantity, price, invested_am
         invested_amount = (quantity - $1) * price_per_share
         WHERE user_id = $2 AND stock_name = $3
         RETURNING *`;
-        result = await pool.query(query, [quantity, user_id, stock_name, invested_amount]);
+        result = await pool.query(query, [quantity, user_id, stock_name]);
     }
-    // console.log(result, 'result');
+    // console.log(result, 'result');  
     return result.rowCount;
 }
 
