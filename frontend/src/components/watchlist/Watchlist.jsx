@@ -30,7 +30,11 @@ const Watchlist = () => {
         setWatchlist(data);
         setLoading(false);
       } else {
-        setError(message);
+        if(message === "Watchlist does not exist!") { 
+          failureToast('No watchlist found');
+        } else {
+          setError('Please try again later.');
+        }
         setLoading(false);
       }
     };

@@ -54,9 +54,13 @@ const AccountBalancePage = () => {
           accountNumber: data[0].bank_account_number,
           accountType: 'Trading Account'
         };
-        setBalance(tempBalance);
+        setBalance(tempBalance || null);
       } else {
-        failureToast('Please try again later');
+        if(message === "No balance history found!") {
+          failureToast('No balance history found');
+        } else {
+          failureToast('Please try again later');
+        }
       } 
       setLoading(false);
     } catch (error) {
@@ -126,7 +130,7 @@ const AccountBalancePage = () => {
       if(code === 200) {
         successToast('Money withdrawn successfully');
       } else {
-        failureToast('Please try again later');
+          failureToast('Please try again later');
       }
       setWithdrawModalOpen(false);
       setWithdrawAmount('');
@@ -196,6 +200,14 @@ const AccountBalancePage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header title="Account Balance" />
+      {balance === null && (
+        <div className="p-8 text-center">
+          <div className="text-gray-400 text-6xl mb-4">👀</div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Bank account does not exist!</h3>
+          <p className="text-gray-500">Please add a bank account to continue</p>
+        </div>
+      )}
+      
       { balance && (
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Page Header */}

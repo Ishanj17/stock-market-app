@@ -7,3 +7,5 @@ floor only possible for price right now
 filter nad seaches where possible
 
 platform fee
+
+invested amount getting negative
