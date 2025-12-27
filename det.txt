@@ -1,0 +1,1952 @@
+# Stock Market Trading Application - Project Overview
+
+## 🎯 Project Summary
+
+This is a **full-stack stock market trading simulation application** that allows users to:
+- Browse and analyze stocks, mutual funds, commodities, and IPOs
+- Buy and sell stocks with real-time market data
+- Manage their investment portfolio
+- Track transaction history
+- Maintain a watchlist of favorite stocks
+- Manage account balance (add/withdraw funds)
+
+---
+
+## 🛠️ Technology Stack
+
+### **Backend**
+- **Runtime**: Node.js
+- **Framework**: Express.js v5.1.0 (RESTful API)
+- **Database**: PostgreSQL (using `pg` library with connection pooling)
+- **Authentication**: JWT (JSON Web Tokens) with `jsonwebtoken`
+- **Password Security**: bcrypt (hashing with 10 salt rounds)
+- **HTTP Client**: Axios v1.11.0
+- **CORS**: Enabled for cross-origin requests
+- **Environment Variables**: dotenv for configuration management
+
+### **Frontend**
+- **Framework**: React v19.1.0
+- **Routing**: React Router DOM v7.7.1
+- **Styling**: Tailwind CSS v3.4.0
+- **HTTP Client**: Axios v1.11.0
+- **Icons**: React Icons v5.5.0
+- **Notifications**: React Toastify v11.0.5
+- **Build Tool**: Create React App (react-scripts v5.0.1)
+
+### **External APIs**
+- **Stock Data API**: `stock.indianapi.in` (Indian stock market data)
+  - Real-time stock prices
+  - Trending stocks
+  - BSE/NSE most active stocks
+  - 52-week high/low data
+  - Price shockers
+  - Mutual funds data
+  - IPO information
+  - Market news
+
+---
+
+## 🏗️ Architecture Overview
+
+### **Backend Architecture (MVC Pattern)**
+
+```
+backend/
+├── index.js                 # Express server entry point
+├── db.js                    # PostgreSQL connection & schema initialization
+├── routes/                  # API route definitions
+│   ├── stocks.js
+│   ├── commodities.js
+│   ├── mutualFunds.js
+│   ├── ipos.js
+│   ├── news.js
+│   ├── user.js
+│   ├── watchlist.js
+│   └── transactions.js
+├── controllers/             # Business logic handlers
+│   ├── stockController.js
+│   ├── userController.js
+│   ├── transactionsController.js
+│   └── ...
+├── models/                  # Database query functions
+│   ├── userLogin.js
+│   ├── transactions.js
+│   └── watchlist.js
+└── services/                # External API integration
+    └── apiService.js
+```
+
+### **Frontend Architecture (Component-Based)**
+
+```
+frontend/src/
+├── App.js                   # Main routing configuration
+├── index.js                 # React app entry point
+├── context/
+│   └── AuthContext.js       # Global authentication state
+├── components/
+│   ├── auth/               # Login/Signup modals
+│   ├── dashboard/          # Home page components
+│   ├── stocks/             # Stock browsing & trading
+│   ├── mutual-funds/       # Mutual fund details
+│   ├── ipos/               # IPO listings
+│   ├── investments/        # User portfolio view
+│   ├── watchlist/          # Watchlist management
+│   ├── balance/            # Account balance management
+│   ├── transactions/       # Transaction history
+│   └── common/             # Reusable components
+```
+
+---
+
+## 📊 Database Schema
+
+### **Tables Created:**
+
+1. **`user_accounts`**
+   - `user_id` (UUID, Primary Key)
+   - `name` (VARCHAR)
+   - `email` (VARCHAR, Unique)
+   - `password_hash` (VARCHAR) - bcrypt hashed
+   - `created_at` (TIMESTAMP)
+
+2. **`portfolio`**
+   - `portfolio_id` (UUID, Primary Key)
+   - `user_id` (UUID, Foreign Key → user_accounts)
+   - `stock_name` (VARCHAR)
+   - `quantity` (INTEGER)
+   - `price_per_share` (DECIMAL) - Average cost basis
+   - `created_at` (TIMESTAMP)
+   - Unique constraint on (user_id, stock_name)
+
+3. **`watchlist`**
+   - `watchlist_id` (UUID, Primary Key)
+   - `user_id` (UUID, Foreign Key)
+   - `stock_name` (VARCHAR)
+   - `added_at` (TIMESTAMP)
+   - Unique constraint on (user_id, stock_name)
+
+4. **`transactions`**
+   - `transaction_id` (UUID, Primary Key)
+   - `user_id` (UUID, Foreign Key)
+   - `stock_name` (VARCHAR)
+   - `quantity` (INTEGER, CHECK > 0)
+   - `price_per_share` (DECIMAL)
+   - `transaction_type` (VARCHAR, CHECK: 'BUY' or 'SELL')
+   - `transaction_date` (TIMESTAMP)
+
+5. **`balance_details`**
+   - `balance_id` (UUID, Primary Key)
+   - `user_id` (UUID, Foreign Key)
+   - `bank_account_number` (VARCHAR)
+   - `total_balance` (DECIMAL, Default: 10000.00)
+   - `invested_amount` (DECIMAL, Default: 0.00)
+   - `updated_at` (TIMESTAMP)
+
+**Key Features:**
+- UUID primary keys for scalability
+- Foreign key constraints with CASCADE delete
+- Check constraints for data integrity
+- Default values for new accounts ($10,000 starting balance)
+
+---
+
+## 🔌 API Endpoints
+
+### **Authentication & User Management**
+- `POST /api/user/sign-up` - User registration
+- `POST /api/user/login` - User login (returns JWT token)
+- `POST /api/user/email-verification` - Check if email exists
+
+### **Stock Data**
+- `GET /api/stocks/detail?name={stock_name}` - Get detailed stock information
+- `GET /api/stocks/trending` - Get trending stocks
+- `GET /api/stocks/price-shockers` - Get price shockers
+- `GET /api/stocks/BSE-most-active` - BSE most active stocks
+- `GET /api/stocks/NSE-most-active` - NSE most active stocks
+- `GET /api/stocks/fetch-52-week-high-low-data` - 52-week high/low data
+
+### **Mutual Funds**
+- `GET /api/mutualfunds` - List all mutual funds
+- `GET /api/mutualfunds/details?stock_name={name}` - Mutual fund details
+
+### **IPOs**
+- `GET /api/ipos` - Get IPO listings
+
+### **News**
+- `GET /api/news` - Get market news
+
+### **Transactions & Portfolio**
+- `POST /api/transactions/get-balance` - Get user balance
+- `POST /api/transactions/buy-stock` - Buy stocks
+- `POST /api/transactions/sell-stock` - Sell stocks
+- `POST /api/transactions/add-money` - Add funds to account
+- `POST /api/transactions/withdraw-money` - Withdraw funds
+- `POST /api/transactions/get-investments` - Get user portfolio
+- `POST /api/transactions/get-transactions` - Get transaction history
+- `POST /api/transactions/add-bank-account` - Link bank account
+
+### **Watchlist**
+- `POST /api/watchlist/get` - Get user's watchlist
+- `POST /api/watchlist/add` - Add stock to watchlist
+- `POST /api/watchlist/remove` - Remove stock from watchlist
+- `POST /api/watchlist/check` - Check if stock is in watchlist
+
+---
+
+## 🔐 Security Features
+
+1. **Password Hashing**: bcrypt with 10 salt rounds
+2. **JWT Authentication**: Token-based auth with 1-hour expiration
+3. **SQL Injection Prevention**: Parameterized queries using `$1, $2, ...` placeholders
+4. **CORS Configuration**: Enabled for cross-origin requests
+5. **Environment Variables**: Sensitive data (DB credentials, JWT secret, API keys) stored in `.env`
+
+---
+
+## 💡 Key Features Implemented
+
+### **1. User Authentication**
+- Secure sign-up with email validation
+- Login with JWT token generation
+- Token stored in localStorage for session persistence
+- AuthContext for global authentication state management
+
+### **2. Stock Trading**
+- **Buy Stocks**: 
+  - Balance validation before purchase
+  - Portfolio update (new stock or update existing)
+  - Average cost basis calculation for existing holdings
+  - Balance deduction
+  - Transaction logging
+  
+- **Sell Stocks**:
+  - Portfolio quantity validation
+  - Portfolio update (quantity reduction)
+  - Balance credit
+  - Transaction logging
+
+### **3. Portfolio Management**
+- View all investments with quantities and average prices
+- Real-time portfolio value calculation
+- Investment tracking per user
+
+### **4. Watchlist**
+- Add/remove stocks to watchlist
+- Check watchlist status
+- User-specific watchlist management
+
+### **5. Balance Management**
+- Initial balance: $10,000 (default)
+- Add funds functionality
+- Withdraw funds functionality
+- Track invested amount vs. available balance
+- Bank account linking
+
+### **6. Transaction History**
+- Complete transaction log (BUY/SELL/ADD/WITHDRAW)
+- Transaction details: stock name, quantity, price, date
+- User-specific transaction filtering
+
+### **7. Market Data Integration**
+- Real-time stock prices from external API
+- Trending stocks
+- BSE/NSE most active stocks
+- Price shockers (biggest movers)
+- 52-week high/low data
+- Mutual funds information
+- IPO listings
+- Market news feed
+
+### **8. User Interface**
+- **Responsive Design**: Tailwind CSS for mobile-first design
+- **Loading States**: Skeleton loaders for better UX
+- **Error Handling**: Error messages with retry functionality
+- **Toast Notifications**: User feedback for actions
+- **Routing**: React Router for navigation
+- **Component Reusability**: Common components (Header, Footer, Modals, etc.)
+
+---
+
+## 🔄 Business Logic Highlights
+
+### **Portfolio Management Logic**
+- **Average Cost Basis**: When buying more of an existing stock, calculates weighted average:
+  ```
+  new_avg_price = ((old_quantity × old_price) + (new_quantity × new_price)) / (old_quantity + new_quantity)
+  ```
+
+- **Portfolio Updates**: 
+  - BUY: Increases quantity, updates average price
+  - SELL: Decreases quantity, maintains average price for remaining shares
+
+### **Balance Management**
+- Separate tracking of `total_balance` and `invested_amount`
+- BUY: Decreases `total_balance`, increases `invested_amount`
+- SELL: Increases `total_balance`, decreases `invested_amount`
+- ADD/WITHDRAW: Only affects `total_balance`
+
+### **Transaction Integrity**
+- All operations are atomic (single database queries)
+- Balance checks before transactions
+- Quantity validation before selling
+- Error handling with appropriate HTTP status codes
+
+---
+
+## 📱 Frontend Features
+
+### **Pages/Screens**
+1. **Dashboard**: Home page with investment options and news
+2. **Stocks Screen**: Browse stocks with tabs (Trending, Shockers, BSE/NSE Active)
+3. **Stock Details**: Detailed view with buy/sell options
+4. **Mutual Funds**: Browse and view mutual fund details
+5. **IPOs**: View upcoming IPOs
+6. **Investments**: User's portfolio view
+7. **Watchlist**: Manage favorite stocks
+8. **Balance**: Account balance management
+9. **Transaction History**: Complete transaction log
+
+### **Common Components**
+- **Header**: Navigation with authentication state
+- **Footer**: Site footer
+- **Modals**: Reusable modal component for forms
+- **Loading Spinner**: Loading indicators
+- **Skeleton Loaders**: Placeholder content while loading
+- **Error Messages**: Error display with retry
+- **Toast Notifications**: Success/error notifications
+
+---
+
+## 🚀 How to Explain in Interview
+
+### **Opening Statement**
+"I built a full-stack stock market trading simulation application using React and Node.js. It's a complete trading platform where users can browse stocks, buy and sell them, manage their portfolio, and track their investments."
+
+### **Technical Highlights**
+1. **Backend**: "I used Express.js to create a RESTful API with PostgreSQL for data persistence. I implemented JWT authentication for secure user sessions and bcrypt for password hashing."
+
+2. **Database Design**: "I designed a normalized database schema with 5 main tables - user accounts, portfolio, transactions, watchlist, and balance details. I used UUIDs for primary keys and implemented foreign key constraints with cascade deletes."
+
+3. **API Integration**: "I integrated with an external stock market API to fetch real-time stock data, including prices, trending stocks, mutual funds, IPOs, and market news."
+
+4. **Frontend**: "I built a responsive React application using functional components and hooks. I used React Router for navigation and Tailwind CSS for styling. I implemented a Context API for global authentication state management."
+
+5. **Key Features**: "The application supports buying and selling stocks with balance validation, portfolio management with average cost basis calculation, watchlist functionality, transaction history tracking, and account balance management."
+
+6. **Security**: "I implemented security best practices including password hashing with bcrypt, JWT tokens for authentication, parameterized SQL queries to prevent injection attacks, and environment variables for sensitive data."
+
+### **Challenges Solved**
+- "I implemented a weighted average cost basis calculation when users buy more of an existing stock"
+- "I ensured transaction integrity by validating balances and quantities before executing trades"
+- "I created a reusable API service layer to handle external API calls with proper error handling"
+- "I implemented proper loading states and error handling throughout the frontend for better UX"
+
+### **What You Learned**
+- Full-stack development with React and Node.js
+- Database design and SQL query optimization
+- RESTful API design and implementation
+- Authentication and authorization
+- State management in React
+- Integration with third-party APIs
+- Error handling and user experience design
+
+---
+
+## 📝 Project Structure Summary
+
+**Backend**: Express.js REST API with PostgreSQL
+**Frontend**: React SPA with React Router
+**Database**: PostgreSQL with 5 main tables
+**Authentication**: JWT + bcrypt
+**Styling**: Tailwind CSS
+**External APIs**: Indian Stock Market API
+
+---
+
+## 🎯 Future Enhancements (from enhancements.md)
+- Remove portfolio row when quantity becomes 0
+- Add bank account details option
+- Floor price validation
+- Search and filter functionality
+- Platform fee implementation
+- Fix invested amount negative values
+
+---
+
+This project demonstrates proficiency in:
+✅ Full-stack development
+✅ Database design and management
+✅ RESTful API development
+✅ Authentication and security
+✅ React state management
+✅ External API integration
+✅ User experience design
+
+
+# Stock Market App - Interview Quick Reference
+
+## 🎯 One-Liner
+Full-stack stock trading simulation app built with React frontend and Node.js/Express backend, featuring real-time market data, portfolio management, and secure user authentication.
+
+---
+
+## 🛠️ Tech Stack (Quick List)
+
+**Backend:**
+- Node.js + Express.js v5
+- PostgreSQL (pg library)
+- JWT + bcrypt (auth)
+- Axios (HTTP client)
+
+**Frontend:**
+- React v19
+- React Router v7
+- Tailwind CSS
+- React Toastify
+
+**Database:**
+- PostgreSQL (5 tables: users, portfolio, transactions, watchlist, balance)
+
+---
+
+## 📊 Database Tables
+
+1. **user_accounts** - User credentials (email, hashed password)
+2. **portfolio** - User stock holdings (stock_name, quantity, avg_price)
+3. **transactions** - All buy/sell/add/withdraw records
+4. **watchlist** - User's favorite stocks
+5. **balance_details** - Account balance & invested amount
+
+---
+
+## 🔑 Key Features
+
+1. **Authentication**: Sign up, login, JWT tokens
+2. **Stock Trading**: Buy/sell with balance validation
+3. **Portfolio**: Track investments with average cost basis
+4. **Watchlist**: Save favorite stocks
+5. **Balance Management**: Add/withdraw funds
+6. **Transaction History**: Complete audit trail
+7. **Market Data**: Real-time stocks, mutual funds, IPOs, news
+
+---
+
+## 🔌 Main API Endpoints
+
+**Auth:**
+- `POST /api/user/sign-up`
+- `POST /api/user/login`
+
+**Stocks:**
+- `GET /api/stocks/trending`
+- `GET /api/stocks/detail?name={stock}`
+
+**Trading:**
+- `POST /api/transactions/buy-stock`
+- `POST /api/transactions/sell-stock`
+- `POST /api/transactions/get-investments`
+
+**Balance:**
+- `POST /api/transactions/get-balance`
+- `POST /api/transactions/add-money`
+
+---
+
+## 💡 Technical Highlights
+
+1. **Average Cost Basis**: Weighted average when buying more of existing stock
+2. **Transaction Integrity**: Balance/quantity validation before trades
+3. **Security**: bcrypt hashing, JWT tokens, parameterized queries
+4. **API Service Layer**: Centralized external API calls
+5. **State Management**: React Context for auth state
+6. **Error Handling**: Comprehensive error handling with user feedback
+
+---
+
+## 🎤 Interview Talking Points
+
+**Architecture:**
+- MVC pattern in backend (routes → controllers → models)
+- Component-based React frontend
+- RESTful API design
+- PostgreSQL with connection pooling
+
+**Security:**
+- Password hashing (bcrypt, 10 rounds)
+- JWT authentication (1-hour expiry)
+- SQL injection prevention (parameterized queries)
+- Environment variables for secrets
+
+**Business Logic:**
+- Portfolio management with average cost calculation
+- Balance tracking (total vs invested)
+- Transaction logging for audit trail
+- Watchlist with unique constraints
+
+**User Experience:**
+- Loading states (skeleton loaders)
+- Error handling with retry
+- Toast notifications
+- Responsive design (Tailwind CSS)
+
+---
+
+## 📈 What This Demonstrates
+
+✅ Full-stack development skills
+✅ Database design and SQL
+✅ RESTful API development
+✅ Authentication & security
+✅ React hooks and context
+✅ External API integration
+✅ Error handling & UX design
+
+---
+
+## 🚀 Quick Demo Flow
+
+1. User signs up → JWT token generated
+2. Browse stocks → External API integration
+3. Buy stock → Balance check → Portfolio update → Transaction log
+4. View portfolio → Database query with user_id
+5. Add to watchlist → Unique constraint handling
+6. View transactions → Complete history
+
+---
+
+## 💬 Sample Answers (Quick Reference)
+
+**Q: What was the most challenging part?**
+A: "The most challenging part was implementing the average cost basis calculation correctly. 
+
+**The Challenge:**
+When a user buys more shares of a stock they already own, I need to calculate a new average price. For example:
+- User buys 10 shares at ₹100 each (total ₹1,000)
+- Later buys 5 more shares at ₹120 each (total ₹600)
+- The average price isn't simply (₹100 + ₹120) / 2 = ₹110
+- It needs to be weighted: (₹1,000 + ₹600) / (10 + 5) = ₹106.67
+
+**The Solution:**
+I implemented a weighted average formula directly in the SQL UPDATE query:
+```sql
+price_per_share = ((quantity * price_per_share) + (new_quantity * new_price)) / (quantity + new_quantity)
+```
+
+This ensures the average price accurately reflects all purchases, which is critical for calculating profit/loss correctly when the user sells shares."
+
+**Q: How did you handle security?**
+A: "I implemented multiple layers of security:
+
+**1. Password Security:**
+- Passwords are never stored in plain text
+- I use bcrypt hashing with 10 salt rounds
+- Even if the database is hacked, passwords can't be recovered
+
+**2. Authentication:**
+- JWT tokens for user sessions (expire after 1 hour)
+- Tokens are cryptographically signed, can't be faked
+- User must be authenticated to perform transactions
+
+**3. Database Security:**
+- All SQL queries use parameterized queries (prevents SQL injection)
+- Instead of: `SELECT * FROM users WHERE email = '${email}'` (dangerous)
+- I use: `SELECT * FROM users WHERE email = $1` with `[email]` as parameter (safe)
+
+**4. Secrets Management:**
+- Database passwords, API keys, JWT secrets stored in environment variables
+- Never committed to version control
+- Different secrets for development and production
+
+This multi-layered approach ensures user data and transactions are protected."
+
+**Q: How does the portfolio update work?**
+A: "The portfolio update happens in two scenarios:
+
+**Scenario 1: Buying a New Stock**
+- User doesn't own this stock yet
+- I insert a new row in the portfolio table
+- Stores: stock name, quantity, purchase price
+
+**Scenario 2: Buying More of Existing Stock**
+- User already owns this stock
+- I update the existing row:
+  - Add new quantity to existing quantity
+  - Recalculate average price using weighted average formula
+  - This ensures if you bought at different prices, the average reflects all purchases
+
+**For Selling:**
+- First, I validate the user owns enough shares
+- Then subtract the quantity from portfolio
+- If quantity reaches zero, the row could be deleted (future enhancement)
+
+**Example:**
+- User owns 10 shares of RELIANCE at ₹2500 average
+- Buys 5 more at ₹3000
+- New quantity: 15 shares
+- New average: ((10×2500) + (5×3000)) / 15 = ₹2666.67
+- This average is used to calculate profit/loss when selling"
+
+**Q: What would you improve?**
+A: "If I were to rebuild or enhance this application, I'd focus on:
+
+**1. Real-Time Updates:**
+- Currently, prices are fetched on page load
+- I'd implement WebSockets for real-time price updates
+- Users would see prices change live without refreshing
+
+**2. Database Transactions:**
+- Currently, buy/sell operations happen step-by-step
+- I'd wrap them in database transactions (BEGIN/COMMIT/ROLLBACK)
+- Ensures all-or-nothing: either everything succeeds or everything is rolled back
+- Prevents partial updates if something fails mid-operation
+
+**3. Performance:**
+- Add pagination for transaction history (currently loads all at once)
+- Implement caching for frequently accessed data (like stock prices)
+- Add database indexes on frequently queried columns
+
+**4. User Experience:**
+- Add search and filter functionality for stocks
+- Implement proper error boundaries in React
+- Add loading skeletons for better perceived performance
+
+**5. Testing:**
+- Add unit tests for business logic (buy/sell calculations)
+- Add integration tests for API endpoints
+- Add end-to-end tests for critical user flows
+
+These improvements would make the application more robust, performant, and user-friendly."
+
+---
+
+## 📋 Comprehensive Interview Questions
+
+### **Architecture & Design Patterns**
+
+**Q: Can you describe the overall architecture of your application?**
+A: "I built a three-tier architecture with three main parts:
+
+**1. Frontend (React Single Page Application):**
+   - This is what users see and interact with in their browser
+   - Built with React, which creates a dynamic, interactive user interface
+   - Uses React Router to navigate between different pages (stocks page, portfolio page, etc.)
+   - All components are organized by feature (stocks folder, transactions folder, etc.)
+
+**2. Backend (Express REST API):**
+   - This is the server that handles all business logic and data processing
+   - Built with Node.js and Express framework
+   - Follows MVC (Model-View-Controller) pattern:
+     - **Routes**: Define the API endpoints (like `/api/stocks/trending`)
+     - **Controllers**: Handle the actual logic when someone calls an endpoint (like fetching stock data)
+     - **Models**: Interact with the database (like getting user data from database)
+     - **Services**: Handle external API calls (like getting stock prices from external stock API)
+
+**3. Database (PostgreSQL):**
+   - Stores all the data (user accounts, portfolios, transactions, etc.)
+   - PostgreSQL is a relational database, meaning data is organized in tables with relationships
+
+**How they work together:**
+- User clicks "Buy Stock" in frontend → Frontend sends request to backend API → Backend checks database → Backend updates database → Backend sends response back → Frontend shows success message"
+
+**Q: Why did you choose MVC pattern for the backend?**
+A: "MVC stands for Model-View-Controller, and it's a way to organize code so everything has a clear purpose:
+
+**The Problem Without MVC:**
+- All code would be mixed together - database queries, business logic, and API handling in one file
+- Hard to find and fix bugs
+- Hard for multiple developers to work together
+- Code becomes messy and hard to maintain
+
+**How MVC Solves This:**
+- **Routes** (like `/api/stocks/buy`): These are like the front door - they define what endpoints exist and which controller handles them
+- **Controllers**: These contain the business logic. For example, when someone wants to buy a stock, the controller checks: Do they have enough money? Is the stock valid? Then it calls the model to update the database
+- **Models**: These handle all database operations. They know how to talk to PostgreSQL - how to insert data, update data, query data
+
+**Real Example:**
+When a user buys a stock:
+1. Route receives the request at `/api/transactions/buy-stock`
+2. Route sends it to `transactionsController.buyStock()`
+3. Controller checks balance, validates the request
+4. Controller calls `transactionsModel.addStockToPortfolio()` to update database
+5. Model executes the SQL query
+6. Controller sends success/error response back
+
+This separation makes code easier to understand, test, and maintain."
+
+**Q: How did you structure your React components?**
+A: "I organized components in a logical folder structure:
+
+**Folder Structure:**
+```
+components/
+├── auth/          → Login and signup modals
+├── stocks/        → Stock browsing and buying
+├── transactions/  → Transaction history
+├── balance/       → Account balance management
+├── watchlist/     → Favorite stocks
+└── common/        → Reusable components (Header, Footer, Modals)
+```
+
+**Why This Structure:**
+- **By Feature**: Each folder contains everything related to that feature (stocks folder has StockScreen, StockDetails, BuyStockModal)
+- **Common Folder**: Components used everywhere (like Header, Footer) go in common folder so they're easy to find and reuse
+
+**Component Types:**
+1. **Page Components**: Full pages like `StockScreen.jsx` - these are the main screens users see
+2. **Detail Components**: Show details of one item, like `StockDetails.jsx` - shows info about one stock
+3. **Modal Components**: Pop-up windows, like `BuyStockModal.jsx` - appears when user clicks "Buy"
+4. **Common Components**: Reusable pieces like `Header.jsx`, `LoadingSpinner.jsx` - used across multiple pages
+
+**State Management:**
+- **Local State**: Each component manages its own data using `useState` hook (like quantity input in buy modal)
+- **Global State**: Authentication info (user logged in, user ID) is in React Context so all components can access it
+- **No Redux**: I didn't need Redux because the state management was simple enough for Context API
+
+**Example Flow:**
+- User visits `/stocks` → React Router loads `StockScreen` component
+- `StockScreen` fetches stock data from API and displays it
+- User clicks a stock → Navigates to `/stocks/detail/RELIANCE` → Loads `StockDetails` component
+- User clicks "Buy" → `BuyStockModal` component opens
+- Modal uses `useAuth()` hook to get current user from Context"
+
+---
+
+### **Database Design & SQL**
+
+**Q: Why did you choose PostgreSQL over MongoDB?**
+A: "I chose PostgreSQL (a relational/SQL database) over MongoDB (a NoSQL database) for several important reasons:
+
+**1. ACID Compliance (Critical for Money):**
+   - ACID stands for Atomicity, Consistency, Isolation, Durability
+   - **Why it matters**: When a user buys a stock, multiple things must happen together:
+     - Deduct money from balance
+     - Add stock to portfolio
+     - Record transaction
+   - If any step fails, ALL must be undone (atomicity)
+   - PostgreSQL guarantees this; MongoDB doesn't guarantee it as strongly
+   - **Real example**: If database crashes mid-transaction, PostgreSQL ensures either everything saves or nothing saves - no partial data
+
+**2. Relational Data Structure:**
+   - My data has clear relationships:
+     - One user has many transactions
+     - One user has one balance
+     - One user has many portfolio items
+   - PostgreSQL handles these relationships with foreign keys
+   - **Example**: If I delete a user, PostgreSQL automatically deletes all their transactions (CASCADE delete)
+   - MongoDB would require manual cleanup
+
+**3. Complex Queries:**
+   - I need to calculate things like: "Show me all stocks where user bought more than 10 shares and current price is above average purchase price"
+   - PostgreSQL's SQL makes this easy with JOINs and WHERE clauses
+   - MongoDB would require more complex code
+
+**4. Decimal Precision:**
+   - Money calculations need exact precision (₹1234.56, not ₹1234.559999)
+   - PostgreSQL has DECIMAL type for exact financial calculations
+   - MongoDB uses floating point which can have rounding errors
+
+**5. Data Integrity:**
+   - Foreign keys ensure: "You can't create a transaction for a user that doesn't exist"
+   - CHECK constraints ensure: "Transaction type must be BUY or SELL, nothing else"
+   - PostgreSQL enforces these rules at database level
+   - MongoDB would require application-level checks (less reliable)"
+
+**Q: Explain your database schema design.**
+A: "I designed 5 main tables that work together:
+
+**1. user_accounts Table:**
+   - **Purpose**: Stores user login information
+   - **Fields**: 
+     - `user_id` (UUID) - Unique identifier for each user
+     - `name` - User's full name
+     - `email` - Login email (must be unique)
+     - `password_hash` - Encrypted password (never store plain passwords!)
+     - `created_at` - When account was created
+   - **Why UUID**: Can't guess user IDs, prevents security issues
+
+**2. portfolio Table:**
+   - **Purpose**: Stores what stocks each user owns
+   - **Fields**:
+     - `portfolio_id` - Unique ID for this portfolio entry
+     - `user_id` - Links to user_accounts (foreign key)
+     - `stock_name` - Name of stock (like "RELIANCE")
+     - `quantity` - How many shares owned
+     - `price_per_share` - Average price paid (important for profit/loss calculation)
+   - **Unique Constraint**: One user can't have duplicate entries for same stock
+   - **Foreign Key**: If user is deleted, their portfolio is automatically deleted
+
+**3. transactions Table:**
+   - **Purpose**: Complete history of all buy/sell/add/withdraw actions
+   - **Fields**:
+     - `transaction_id` - Unique ID
+     - `user_id` - Who made the transaction
+     - `stock_name` - Which stock (empty for add/withdraw money)
+     - `quantity` - How many shares
+     - `price_per_share` - Price at time of transaction
+     - `transaction_type` - Must be BUY, SELL, ADD, or WITHDRAW (CHECK constraint)
+     - `transaction_date` - When it happened
+   - **Why Important**: Audit trail - can see complete history of all actions
+
+**4. watchlist Table:**
+   - **Purpose**: Stocks user wants to watch (like favorites)
+   - **Fields**:
+     - `watchlist_id` - Unique ID
+     - `user_id` - Which user
+     - `stock_name` - Stock to watch
+     - `added_at` - When added
+   - **Unique Constraint**: User can't add same stock twice to watchlist
+
+**5. balance_details Table:**
+   - **Purpose**: User's account balance information
+   - **Fields**:
+     - `balance_id` - Unique ID
+     - `user_id` - Which user
+     - `bank_account_number` - Linked bank account
+     - `total_balance` - Available cash (starts at ₹10,000)
+     - `invested_amount` - Money currently in stocks
+     - `updated_at` - Last update time
+   - **Why Two Amounts**: 
+     - `total_balance`: Money available to spend
+     - `invested_amount`: Money already in stocks
+     - When you buy stock: total_balance decreases, invested_amount increases
+
+**How They Connect:**
+- All tables link to `user_accounts` via `user_id` (foreign key)
+- This ensures data integrity: Can't have transactions for non-existent users
+- CASCADE delete: Delete user → automatically delete all their data from all tables"
+
+**Q: How do you calculate the average cost basis when buying more shares?**
+A: "This is important for tracking profit/loss correctly. Let me explain with a simple example:
+
+**The Problem:**
+- User buys 10 shares of RELIANCE at ₹100 each (total ₹1,000)
+- Later, user buys 5 more shares at ₹120 each (total ₹600)
+- Question: What's the average price per share now?
+
+**Wrong Way (Simple Average):**
+- Average = (₹100 + ₹120) / 2 = ₹110
+- This is wrong because it ignores quantities!
+
+**Correct Way (Weighted Average):**
+- Total spent: ₹1,000 + ₹600 = ₹1,600
+- Total shares: 10 + 5 = 15
+- Average price = ₹1,600 / 15 = ₹106.67 per share
+
+**The Formula:**
+```
+new_average = ((old_quantity × old_price) + (new_quantity × new_price)) / (old_quantity + new_quantity)
+```
+
+**In My Code (SQL):**
+```sql
+UPDATE portfolio
+SET quantity = quantity + $1,  -- Add new shares to existing
+    price_per_share = ((quantity * price_per_share) + ($1 * $2)) / (quantity + $1),
+    invested_amount = invested_amount + $5
+WHERE user_id = $3 AND stock_name = $4
+```
+
+**Breaking It Down:**
+- `quantity * price_per_share` = current total value of existing shares
+- `$1 * $2` = value of new shares being bought ($1 = quantity, $2 = new price)
+- Add them together, divide by total quantity
+- This gives the new weighted average
+
+**Why This Matters:**
+- When user sells, we need to know average purchase price to calculate profit/loss
+- If average was ₹106.67 and they sell at ₹150, profit = ₹150 - ₹106.67 = ₹43.33 per share
+- Without weighted average, profit calculations would be wrong!"
+
+**Q: Why did you use UUIDs instead of auto-incrementing integers?**
+A: "UUID stands for Universally Unique Identifier. It's a long random string like: `550e8400-e29b-41d4-a716-446655440000`
+
+**Auto-incrementing Integers (1, 2, 3, 4...):**
+- Simple and short
+- But has problems:
+  - **Predictable**: User ID 1, then 2, then 3... hackers can guess and try to access other users' data
+  - **Collisions**: If you have two databases and merge them, you'll have duplicate IDs
+  - **Security Risk**: If someone sees their ID is 123, they might try 122, 124 to access others' accounts
+
+**UUIDs (Random Long Strings):**
+- **Unpredictable**: Can't guess the next ID
+- **Unique**: Even across different databases/servers
+- **Secure**: Harder to enumerate (try all possible IDs)
+- **Scalable**: If you have multiple servers, they can generate IDs without coordinating
+
+**Real Example:**
+- With integers: User signs up, gets ID 100. They might try to access user 99 or 101
+- With UUID: User gets `a7f3b2c1-...` - they can't guess other users' IDs
+
+**Trade-off:**
+- UUIDs are longer (36 characters vs 1-10 digits)
+- Slightly more storage space
+- But security and scalability benefits outweigh this"
+
+**Q: How do you handle database connection pooling?**
+A: "Connection pooling is like having a pool of workers ready to do database work, instead of hiring a new worker for each task.
+
+**The Problem Without Pooling:**
+- Every time frontend makes a request, backend opens a new database connection
+- Opening/closing connections is slow (takes time)
+- Database has a limit on connections (maybe 100 max)
+- If 200 users connect simultaneously, 100 get errors
+
+**How Connection Pooling Works:**
+- Create a pool of, say, 10 database connections at startup
+- When request comes in, grab an available connection from pool
+- Use it to run the query
+- Return connection to pool when done (don't close it)
+- Next request can reuse the same connection
+
+**In My Code:**
+```javascript
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT
+  // Pool automatically manages connections
+});
+```
+
+**Benefits:**
+- **Faster**: Reusing connections is much faster than creating new ones
+- **Efficient**: 10 connections can handle hundreds of requests (one at a time per connection)
+- **Reliable**: No connection limit errors
+- **Automatic**: Pool library handles all the complexity
+
+**Real Example:**
+- Without pooling: 100 requests = 100 new connections = slow, might hit limit
+- With pooling: 100 requests = reuse 10 connections = fast, no limit issues"
+
+---
+
+### **Authentication & Security**
+
+**Q: Walk me through your authentication flow.**
+A: "Let me explain step-by-step how a user logs in:
+
+**Step 1: User Signs Up**
+1. User enters email, name, and password in signup form
+2. Frontend sends this to backend: `POST /api/user/sign-up`
+3. Backend receives the password
+4. **Important**: Backend NEVER stores the actual password!
+5. Backend uses bcrypt to hash the password:
+   - Takes password like "mypassword123"
+   - Adds random "salt" (extra random data)
+   - Runs it through bcrypt algorithm 10 times
+   - Gets hash like: `$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy`
+6. Stores the hash (not the password) in database
+7. Backend generates JWT token (like a temporary ID card)
+8. Token contains: user's email, expiration time (1 hour)
+9. Backend sends token back to frontend
+10. Frontend saves token in browser's localStorage
+
+**Step 2: User Logs In Later**
+1. User enters email and password
+2. Frontend sends to backend: `POST /api/user/login`
+3. Backend looks up user by email in database
+4. Gets the stored password hash
+5. Takes the password user just entered
+6. Runs it through bcrypt with the same salt
+7. Compares the new hash with stored hash
+8. If they match → password is correct!
+9. If they don't match → wrong password, return error
+10. If correct, generate new JWT token and send to frontend
+
+**Step 3: Making Authenticated Requests**
+1. User clicks "Buy Stock"
+2. Frontend gets token from localStorage
+3. Frontend sends request with token in header: `Authorization: Bearer <token>`
+4. Backend verifies token is valid and not expired
+5. Backend extracts user email from token
+6. Backend processes the request
+
+**Why Hash Passwords?**
+- If database is hacked, hackers only see hashes, not actual passwords
+- Hash is one-way: can't reverse it to get original password
+- Even if two users have same password, their hashes are different (because of salt)"
+
+**Q: Why did you choose JWT over session-based authentication?**
+A: "Let me explain both approaches:
+
+**Session-Based Authentication (Traditional Way):**
+- User logs in → Server creates a session, stores it in server memory/database
+- Server sends session ID (like "abc123") to browser
+- Browser stores session ID in cookie
+- Every request: Browser sends session ID → Server looks up session → Finds user info
+- **Problem**: Server must remember every session (uses memory/database)
+- **Problem**: If you have multiple servers, sessions must be shared (complex)
+- **Problem**: Server must look up session for every request (database query)
+
+**JWT (JSON Web Token) - What I Used:**
+- User logs in → Server creates a token (like a signed document)
+- Token contains user info (email) + expiration time
+- Server signs it with a secret key (like a signature)
+- Server sends token to browser
+- Browser stores token in localStorage
+- Every request: Browser sends token → Server verifies signature → Extracts user info
+- **Benefit**: Server doesn't need to store anything! Token is self-contained
+- **Benefit**: Multiple servers can verify token without sharing database
+- **Benefit**: No database lookup needed (faster)
+
+**Real Example:**
+- **Session**: "Who is user abc123?" → Look in database → "Oh, it's john@email.com"
+- **JWT**: Token says "I am john@email.com" (signed, can't be faked) → No lookup needed!
+
+**Trade-off:**
+- **JWT Problem**: Can't easily revoke a token (it's valid until it expires)
+- **Session Solution**: Delete session from database = instant logout
+- **My Solution**: Short expiration (1 hour) - token becomes invalid quickly anyway"
+
+**Q: How do you prevent SQL injection attacks?**
+A: "SQL injection is when a hacker tries to break your database by sending malicious SQL code. Let me show you:
+
+**The Dangerous Way (What NOT to do):**
+```javascript
+// BAD CODE - VULNERABLE TO ATTACKS
+const email = req.body.email;
+const query = `SELECT * FROM users WHERE email = '${email}'`;
+// If user enters: email = "admin' OR '1'='1"
+// Query becomes: SELECT * FROM users WHERE email = 'admin' OR '1'='1'
+// This returns ALL users! Security breach!
+```
+
+**The Safe Way (What I do):**
+```javascript
+// GOOD CODE - SAFE
+const email = req.body.email;
+const query = `SELECT * FROM users WHERE email = $1`;
+const result = await pool.query(query, [email]);
+// Database treats $1 as a placeholder
+// It automatically escapes any special characters
+// Even if user enters malicious code, it's treated as plain text
+```
+
+**How It Works:**
+- `$1` is a placeholder (like a blank in a form)
+- `[email]` is the actual value
+- PostgreSQL library automatically:
+  1. Escapes special characters (turns `'` into `\'`)
+  2. Treats it as data, not code
+  3. Prevents any SQL commands from executing
+
+**Real Attack Example:**
+- **Attacker tries**: Email = `admin'--` (tries to comment out rest of query)
+- **With my code**: Database treats it as the literal string "admin'--"
+- **Result**: No user found (safe), instead of returning admin user (dangerous)
+
+**I use this everywhere:**
+- All database queries use `$1, $2, $3` placeholders
+- Never concatenate user input into SQL strings
+- This is the industry standard way to prevent SQL injection"
+
+**Q: What security measures did you implement?**
+A: "I implemented multiple layers of security:
+
+**1. Password Security:**
+   - **bcrypt Hashing**: Passwords are never stored in plain text
+   - **Salt Rounds (10)**: Makes hashing slower (intentionally) so hackers can't brute force quickly
+   - **One-Way**: Can't reverse the hash to get original password
+
+**2. Authentication:**
+   - **JWT Tokens**: Secure way to identify users
+   - **Expiration (1 hour)**: Tokens expire, reducing risk if stolen
+   - **Signed**: Tokens are cryptographically signed, can't be faked
+
+**3. Database Security:**
+   - **Parameterized Queries**: Prevents SQL injection (explained above)
+   - **Foreign Keys**: Prevents invalid data (can't create transaction for non-existent user)
+   - **CHECK Constraints**: Enforces rules (transaction type must be BUY/SELL)
+
+**4. API Security:**
+   - **CORS Configuration**: Controls which websites can call my API
+   - **Input Validation**: Check data before processing (email format, quantity > 0)
+   - **Error Messages**: Don't reveal sensitive info in errors (don't say "user doesn't exist", say "invalid credentials")
+
+**5. Secrets Management:**
+   - **Environment Variables**: Database passwords, API keys, JWT secret stored in `.env` file
+   - **Never Committed**: `.env` file is in `.gitignore`, never uploaded to GitHub
+   - **Different for Each Environment**: Dev, staging, production have different secrets
+
+**6. Authorization:**
+   - **User Validation**: Before any transaction, verify user is authenticated
+   - **Ownership Checks**: User can only see/modify their own data
+   - **Balance Checks**: Verify user has enough money before allowing purchase
+
+**Example Security Flow:**
+1. User tries to buy stock
+2. Check: Is user logged in? (JWT token valid?)
+3. Check: Does user have enough balance?
+4. Check: Is stock name valid? (prevent injection)
+5. Check: Is quantity positive number?
+6. Only then: Process transaction"
+
+**Q: How would you handle token refresh?**
+A: "Currently, tokens expire after 1 hour and user must log in again. For better user experience, I'd implement token refresh:
+
+**The Problem:**
+- User is working, token expires after 1 hour
+- User gets logged out mid-task
+- Must log in again (annoying)
+
+**The Solution - Two Tokens:**
+
+**1. Access Token (Short-lived):**
+   - Expires in 15-30 minutes
+   - Used for all API requests
+   - Contains user info (email, user_id)
+   - If expired, can't use it
+
+**2. Refresh Token (Long-lived):**
+   - Expires in 7-30 days
+   - Used ONLY to get new access tokens
+   - Stored in httpOnly cookie (more secure than localStorage)
+   - Can't be accessed by JavaScript (prevents XSS attacks)
+
+**How It Works:**
+1. User logs in → Gets both access token AND refresh token
+2. Access token stored in memory/localStorage
+3. Refresh token stored in httpOnly cookie
+4. User makes requests with access token
+5. When access token expires:
+   - Frontend detects 401 error (unauthorized)
+   - Automatically sends refresh token to `/api/refresh` endpoint
+   - Backend verifies refresh token
+   - Backend issues new access token
+   - Frontend continues working (user doesn't notice)
+6. If refresh token expires → User must log in again
+
+**Security Benefits:**
+- **Short access tokens**: If stolen, only valid for 15 minutes
+- **httpOnly cookies**: JavaScript can't access refresh token (prevents XSS)
+- **Separate endpoints**: Refresh token can only be used for refresh, not for API calls
+- **Revocation**: Can invalidate refresh token on logout
+
+**Implementation:**
+```javascript
+// Login response
+{
+  accessToken: "eyJ...", // 15 min expiry
+  refreshToken: "abc123..." // 7 days expiry
+}
+
+// Refresh endpoint
+POST /api/auth/refresh
+Body: { refreshToken: "abc123..." }
+Response: { accessToken: "eyJ..." } // New access token
+```"
+
+---
+
+### **API Design & Integration**
+
+**Q: How did you design your REST API?**
+A: "REST (Representational State Transfer) is a set of rules for designing APIs. I followed these principles:
+
+**1. HTTP Methods (What action to take):**
+   - **GET**: Fetch data (no changes) - like `GET /api/stocks/trending`
+   - **POST**: Create or perform action - like `POST /api/transactions/buy-stock`
+   - **PUT/PATCH**: Update existing data (I didn't use these much)
+   - **DELETE**: Remove data (I didn't use this)
+
+**2. URL Structure (How to organize endpoints):**
+   - Pattern: `/api/resource/action`
+   - Examples:
+     - `/api/stocks/trending` - Get trending stocks
+     - `/api/stocks/detail?name=RELIANCE` - Get stock details
+     - `/api/transactions/buy-stock` - Buy a stock
+     - `/api/user/login` - User login
+   - **Why this structure**: Clear, predictable, easy to understand
+
+**3. Status Codes (Tell frontend what happened):**
+   - **200**: Success - Request worked
+   - **400**: Bad Request - Invalid data sent (like negative quantity)
+   - **401**: Unauthorized - Not logged in or invalid token
+   - **404**: Not Found - Resource doesn't exist
+   - **500**: Server Error - Something broke on server
+
+**4. Request/Response Format:**
+   - **Request**: Send JSON in body - `{ "user_id": "123", "stock_name": "RELIANCE", "quantity": 10 }`
+   - **Response**: Return JSON - `{ "code": 200, "message": "Success", "data": {...} }`
+   - **Consistent**: All endpoints follow same format
+
+**5. Resource Organization:**
+   - Grouped by feature:
+     - `/api/stocks/*` - All stock-related endpoints
+     - `/api/transactions/*` - All transaction endpoints
+     - `/api/user/*` - All user/auth endpoints
+   - Makes it easy to find and maintain
+
+**Example Flow:**
+```
+Frontend: POST /api/transactions/buy-stock
+Body: { user_id: "abc", stock_name: "RELIANCE", quantity: 5, price: 2500 }
+→ Backend processes
+→ Response: { code: 200, message: "Stock bought successfully", data: {...} }
+```"
+
+**Q: How do you handle external API calls?**
+A: "I created a centralized service layer to handle all external API calls. Here's how:
+
+**The Problem:**
+- I need to call external stock API in multiple places (stock details, watchlist, etc.)
+- If I write API call code everywhere, it's:
+  - Hard to maintain (change URL in 10 places)
+  - Hard to update (add error handling in 10 places)
+  - Inconsistent (different error handling)
+
+**The Solution - Centralized Service:**
+
+**1. Base Function (`fetchFromAPI`):**
+```javascript
+const fetchFromAPI = async (url) => {
+  try {
+    const response = await axios.get(url, {
+      headers: { 'x-api-key': process.env.STOCK_API_KEY },
+      httpsAgent: new https.Agent({ rejectUnauthorized: false })
+    });
+    return response.data;
+  } catch (err) {
+    throw new Error(`API Fetch Error: ${err.message}`);
+  }
+};
+```
+- Handles: API key, HTTPS, error handling
+- Reusable for all API calls
+
+**2. Specific Services:**
+```javascript
+const stockService = {
+  async getStockDetail(name) {
+    return await fetchFromAPI(`https://stock.indianapi.in/stock?name=${name}`);
+  },
+  async getTrendingStock() {
+    return await fetchFromAPI('https://stock.indianapi.in/trending');
+  }
+};
+```
+- Each service wraps the base function
+- Easy to add new endpoints
+- Consistent error handling
+
+**Benefits:**
+- **Single Point of Change**: Update API URL in one place
+- **Consistent**: All calls use same error handling
+- **Easy to Test**: Mock the service, test controllers
+- **Easy to Add Features**: Add retry logic, caching in one place"
+
+**Q: How do you handle API rate limiting or failures?**
+A: "Currently, I have basic error handling. For production, here's what I'd add:
+
+**Current Implementation:**
+- Try-catch blocks around API calls
+- Return error message if API fails
+- Frontend shows error to user
+
+**Production Improvements:**
+
+**1. Retry Logic with Exponential Backoff:**
+   - **Problem**: API might be temporarily down
+   - **Solution**: Retry failed requests
+   - **Exponential Backoff**: Wait 1 second, retry. If fails, wait 2 seconds, retry. If fails, wait 4 seconds...
+   - **Why**: Gives API time to recover, doesn't overwhelm it
+   ```javascript
+   // Pseudo-code
+   try {
+     return await fetchFromAPI(url);
+   } catch (error) {
+     await sleep(1000); // Wait 1 second
+     try {
+       return await fetchFromAPI(url); // Retry
+     } catch (error) {
+       // Give up after retries
+     }
+   }
+   ```
+
+**2. Rate Limiting:**
+   - **Problem**: External API might limit requests (e.g., 100 per minute)
+   - **Solution**: Track requests, slow down if approaching limit
+   - **Implementation**: Count requests per minute, delay if needed
+
+**3. Caching:**
+   - **Problem**: Same data requested multiple times (wasteful)
+   - **Solution**: Store response in memory/Redis
+   - **Example**: Stock prices cached for 1 minute (prices don't change every second)
+   - **Benefit**: Faster responses, fewer API calls
+
+**4. Circuit Breaker Pattern:**
+   - **Problem**: If external API is down, every request fails (wasteful)
+   - **Solution**: After X failures, stop trying for Y minutes
+   - **How it works**:
+     - Try API call → Fails
+     - Try again → Fails
+     - Try again → Fails
+     - **Circuit opens**: Stop trying for 5 minutes
+     - After 5 minutes: Try again (circuit closes if successful)
+   - **Benefit**: Saves resources, faster failure response"
+
+**Q: Why did you use Promise.all in the watchlist controller?**
+A: "This is about making multiple API calls efficiently. Let me explain:
+
+**The Problem:**
+- User has 5 stocks in watchlist: [RELIANCE, TCS, INFY, HDFC, WIPRO]
+- To show watchlist, I need current price for each stock
+- Each price requires one API call
+- **Sequential approach** (one after another):
+  ```
+  Call 1: Get RELIANCE price → Wait 2 seconds → Done
+  Call 2: Get TCS price → Wait 2 seconds → Done
+  Call 3: Get INFY price → Wait 2 seconds → Done
+  Call 4: Get HDFC price → Wait 2 seconds → Done
+  Call 5: Get WIPRO price → Wait 2 seconds → Done
+  Total time: 10 seconds! (User waits 10 seconds)
+  ```
+
+**The Solution - Promise.all (Parallel):**
+```javascript
+const resData = await Promise.all(
+  watchlist.map(async (stock) => {
+    const rawData = await stockService.getStockDetail(stock.stock_name);
+    return { name: rawData.companyName, price: rawData.currentPrice };
+  })
+);
+```
+
+**How It Works:**
+- `Promise.all` starts ALL API calls at the same time
+- Waits for ALL to finish
+- Returns array of results
+- **Parallel approach**:
+  ```
+  Start Call 1: RELIANCE → (waiting...)
+  Start Call 2: TCS → (waiting...)
+  Start Call 3: INFY → (waiting...)
+  Start Call 4: HDFC → (waiting...)
+  Start Call 5: WIPRO → (waiting...)
+  All finish → Total time: 2 seconds! (User waits 2 seconds)
+  ```
+
+**Real Example:**
+- **Without Promise.all**: 5 stocks × 2 seconds each = 10 seconds
+- **With Promise.all**: 5 stocks in parallel = 2 seconds (fastest one)
+- **5x faster!**
+
+**Error Handling:**
+- If one stock fails, others still work
+- I return `null` for failed stocks, filter them out
+- User sees available data, not complete failure
+
+**When to Use Promise.all:**
+- Multiple independent operations (don't depend on each other)
+- All must complete before proceeding
+- Want to wait for all results"
+
+---
+
+### **Frontend Development**
+
+**Q: How do you manage state in your React application?**
+A: "State management is about storing and sharing data in your app. I use different approaches for different needs:
+
+**1. Local State (useState Hook):**
+   - **When**: Data only needed in one component
+   - **Example**: Quantity input in buy modal
+   ```javascript
+   const [quantity, setQuantity] = useState(1);
+   // Only BuyStockModal component uses this
+   ```
+   - **Why**: Simple, no need to share with other components
+
+**2. Global State (Context API):**
+   - **When**: Data needed across multiple components
+   - **Example**: User authentication info
+   ```javascript
+   // AuthContext.js - Creates context
+   const AuthContext = createContext();
+   
+   // App.js - Provides context to all components
+   <AuthProvider>
+     <App />
+   </AuthProvider>
+   
+   // Any component - Uses context
+   const { user, login, logout } = useAuth();
+   ```
+   - **Why**: Header, BuyModal, Portfolio all need to know if user is logged in
+   - **How it works**: Context provides data to all child components without passing props through every level
+
+**3. Why Not Redux?**
+   - Redux is powerful but complex
+   - My app only needs: user info, authentication status
+   - Context API is simpler for this use case
+   - If app grew larger, I'd consider Redux
+
+**State Flow Example:**
+1. User logs in → `login()` function called
+2. Updates Context state: `setUser(userData)`
+3. All components using `useAuth()` automatically get updated
+4. Header shows user name, Buy button becomes enabled"
+
+**Q: How do you handle loading states and errors?**
+A: "Users need feedback when things are happening. Here's how I handle it:
+
+**1. Loading States:**
+   ```javascript
+   const [loading, setLoading] = useState(false);
+   
+   const fetchData = async () => {
+     setLoading(true);  // Show loading
+     try {
+       const data = await axios.get('/api/stocks');
+       setStocks(data);
+     } finally {
+       setLoading(false);  // Hide loading
+     }
+   };
+   ```
+   - **Why**: Without this, user clicks button → nothing happens → user clicks again → confusion!
+   - **What user sees**: Spinner or skeleton loader while data loads
+
+**2. Skeleton Loaders:**
+   - Instead of blank screen, show placeholder shapes
+   - Looks like content is loading (better UX)
+   - Example: Gray boxes where stock cards will appear
+
+**3. Error Handling:**
+   ```javascript
+   try {
+     const data = await axios.get('/api/stocks');
+   } catch (error) {
+     setError('Failed to load stocks');
+     // Show error message to user
+   }
+   ```
+   - **Why**: If API fails, user sees "Something went wrong" not blank screen
+   - **Retry Option**: Button to try again (better than refreshing page)
+
+**4. Toast Notifications:**
+   - Small popup messages (top of screen)
+   - Success: "Stock bought successfully!" (green)
+   - Error: "Insufficient balance!" (red)
+   - Auto-disappears after 3 seconds
+   - **Why**: Immediate feedback without blocking UI
+
+**Complete Flow Example:**
+1. User clicks "Buy Stock"
+2. Button shows spinner (loading state)
+3. API call happens
+4. If success → Toast: "Success!" + Close modal
+5. If error → Toast: "Error!" + Show error message
+6. Loading state cleared"
+
+**Q: Explain your routing strategy.**
+A: "Routing is how users navigate between pages. Here's my setup:
+
+**1. React Router Setup:**
+   ```javascript
+   // index.js
+   <BrowserRouter>
+     <App />
+   </BrowserRouter>
+   
+   // App.js
+   <Routes>
+     <Route path="/" element={<Dashboard />} />
+     <Route path="/stocks" element={<StockScreen />} />
+     <Route path="/stocks/detail/:name" element={<StockDetails />} />
+   </Routes>
+   ```
+
+**2. Route Types:**
+   - **Static Routes**: `/stocks` → Always shows StockScreen
+   - **Dynamic Routes**: `/stocks/detail/:name` → `:name` is a parameter
+     - `/stocks/detail/RELIANCE` → Shows RELIANCE details
+     - `/stocks/detail/TCS` → Shows TCS details
+     - Component gets `name` from URL: `useParams().name`
+
+**3. Navigation:**
+   ```javascript
+   // Programmatic navigation
+   const navigate = useNavigate();
+   navigate('/stocks');  // Go to stocks page
+   
+   // Link navigation
+   <Link to="/stocks">View Stocks</Link>
+   ```
+
+**4. Protected Routes (Concept):**
+   - Currently, all routes are accessible
+   - For production, I'd add:
+   ```javascript
+   <Route path="/investments" element={
+     user ? <Investments /> : <Navigate to="/" />
+   } />
+   ```
+   - If not logged in → Redirect to home
+
+**5. URL Parameters:**
+   - Stock details page: `/stocks/detail/RELIANCE`
+   - Component reads: `const { name } = useParams();`
+   - Uses `name` to fetch stock data
+   - **Benefit**: User can bookmark/share specific stock page
+
+**Real Example:**
+- User on dashboard → Clicks "View Stocks" → URL changes to `/stocks` → StockScreen component loads
+- User clicks RELIANCE → URL changes to `/stocks/detail/RELIANCE` → StockDetails component loads with RELIANCE data"
+
+**Q: How do you handle form validation?**
+A: "Validation ensures users enter correct data. I validate in two places:
+
+**1. Frontend Validation (Immediate Feedback):**
+   ```javascript
+   const handleBuy = () => {
+     if (!quantity || quantity <= 0) {
+       failureToast('Quantity must be greater than 0');
+       return;  // Stop here, don't send request
+     }
+     if (quantity > 1000) {
+       failureToast('Maximum 1000 shares allowed');
+       return;
+     }
+     // If validation passes, proceed
+   };
+   ```
+   - **Why**: Gives instant feedback, better user experience
+   - **Checks**: Required fields, email format, number ranges, password match
+
+**2. Backend Validation (Security):**
+   ```javascript
+   if (!email || !password) {
+     return res.status(400).json({ error: 'Email and password required' });
+   }
+   if (balance < price * quantity) {
+     return res.json({ message: 'Insufficient balance!' });
+   }
+   ```
+   - **Why**: Frontend can be bypassed (hackers can send direct API requests)
+   - **Checks**: All frontend checks PLUS business logic (balance, stock exists)
+
+**3. Validation Examples:**
+   - **Email**: Must contain @, valid format
+   - **Password**: Minimum length, match confirmation
+   - **Quantity**: Must be positive integer
+   - **Balance**: Must have enough money
+   - **Stock**: Must exist in database
+
+**Why Both Frontend and Backend?**
+- **Frontend only**: Fast feedback, but insecure (can be bypassed)
+- **Backend only**: Secure, but slow feedback (user waits for server response)
+- **Both**: Best of both worlds - fast feedback AND security"
+
+**Q: Why did you choose Tailwind CSS?**
+A: "Tailwind CSS is a utility-first CSS framework. Let me explain:
+
+**Traditional CSS Approach:**
+```css
+/* styles.css */
+.buy-button {
+  background-color: #00D09C;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: bold;
+}
+```
+```html
+<button class="buy-button">Buy</button>
+```
+- **Problem**: Create separate CSS file for every style
+- **Problem**: Styles scattered across files
+- **Problem**: Hard to remember class names
+
+**Tailwind Approach (Utility-First):**
+```html
+<button class="bg-green-500 px-6 py-3 rounded-lg font-bold">
+  Buy
+</button>
+```
+- **No separate CSS file needed!**
+- Classes directly in HTML: `bg-green-500` = background green
+- `px-6` = padding horizontal 6 units
+- `rounded-lg` = large border radius
+
+**Benefits:**
+1. **Faster Development**: No switching between HTML and CSS files
+2. **Consistent**: Predefined sizes/spacing (no random `padding: 13px`)
+3. **Smaller Bundle**: Only used classes are included (purging unused)
+4. **Responsive Easy**: `md:grid-cols-3` = 3 columns on medium screens and up
+5. **Customizable**: Can extend with brand colors in `tailwind.config.js`
+
+**Example:**
+```html
+<!-- Responsive card -->
+<div class="bg-white p-4 rounded-lg shadow-md 
+            hover:shadow-lg transition-shadow
+            md:p-6 lg:p-8">
+  <!-- p-4 on mobile, p-6 on tablet, p-8 on desktop -->
+</div>
+```
+
+**Trade-off:**
+- HTML can get long with many classes
+- But faster to write and maintain than separate CSS files"
+
+---
+
+### **Business Logic & Transactions**
+
+**Q: Walk me through the buy stock flow.**
+A: "Let me walk through exactly what happens when a user clicks 'Buy Stock':
+
+**Step 1: Frontend Validation**
+- User enters quantity (e.g., 5 shares)
+- Frontend checks: Is quantity > 0? Is user logged in?
+- Frontend calculates total cost: 5 shares × ₹2500 = ₹12,500
+
+**Step 2: Frontend Sends Request**
+```javascript
+POST /api/transactions/buy-stock
+Body: {
+  user_id: "abc123",
+  stock_name: "RELIANCE",
+  quantity: 5,
+  price: 2500
+}
+```
+
+**Step 3: Backend Receives Request**
+- Controller: `transactionsController.buyStock()` receives the request
+
+**Step 4: Balance Check**
+```javascript
+const balance = await checkBalance(user_id);
+if (balance[0].total_balance < price * quantity) {
+  return error: "Insufficient balance!";
+}
+```
+- Checks: Does user have ₹12,500?
+- If no → Return error, stop here
+- If yes → Continue
+
+**Step 5: Check Portfolio**
+```javascript
+const stock = await checkStockInPortfolio(user_id, stock_name);
+```
+- Checks: Does user already own this stock?
+- **If NO (new stock)**:
+  - Insert new row in portfolio table
+  - Set quantity = 5, price_per_share = ₹2500
+- **If YES (existing stock)**:
+  - Update existing row
+  - Add 5 to quantity
+  - Recalculate average price (weighted average)
+
+**Step 6: Update Balance**
+```javascript
+await updateBalance(user_id, price * quantity, 'BUY');
+```
+- Deduct ₹12,500 from `total_balance`
+- Add ₹12,500 to `invested_amount`
+- Example: Balance was ₹50,000 → Now ₹37,500 available, ₹12,500 invested
+
+**Step 7: Log Transaction**
+```javascript
+await updateTransactions(user_id, stock_name, quantity, price, 'BUY');
+```
+- Insert record in transactions table
+- Records: Who, what, when, how much
+- For audit trail (can see history later)
+
+**Step 8: Return Success**
+```javascript
+return {
+  code: 200,
+  message: "Stock bought successfully!",
+  data: { user_id, stock_name, quantity, price }
+}
+```
+
+**Step 9: Frontend Updates**
+- Frontend receives success response
+- Shows success message: "Successfully bought 5 shares of RELIANCE"
+- Refreshes portfolio/balance display
+- Closes buy modal
+
+**Important**: Each step validates before proceeding. If any step fails, we return error and don't modify data."
+
+**Q: How do you ensure data consistency during transactions?**
+A: "Data consistency means: either ALL changes happen, or NONE happen. No partial updates.
+
+**The Problem:**
+Imagine this scenario:
+1. User has ₹10,000 balance
+2. User buys stock for ₹10,000
+3. Step 1: Deduct ₹10,000 from balance ✅
+4. Step 2: Add stock to portfolio ❌ (Database crashes!)
+5. Result: User lost ₹10,000 but got no stock! (BAD!)
+
+**Current Implementation:**
+- I validate before each step
+- But if something fails mid-way, previous steps already happened
+- **Risk**: Partial updates possible
+
+**Production Solution - Database Transactions:**
+
+**How Database Transactions Work:**
+```sql
+BEGIN;  -- Start transaction
+
+UPDATE balance_details SET total_balance = total_balance - 10000 WHERE user_id = 'abc';
+INSERT INTO portfolio (user_id, stock_name, quantity) VALUES ('abc', 'RELIANCE', 5);
+INSERT INTO transactions (user_id, stock_name, quantity) VALUES ('abc', 'RELIANCE', 5);
+
+COMMIT;  -- If all succeed, save everything
+-- OR
+ROLLBACK;  -- If any fails, undo everything
+```
+
+**Benefits:**
+- **Atomicity**: All or nothing
+- **Consistency**: Data always in valid state
+- **Isolation**: Other users don't see partial changes
+- **Durability**: Once committed, changes are permanent
+
+**Real Example:**
+```
+BEGIN transaction
+→ Deduct balance ✅
+→ Add to portfolio ✅
+→ Log transaction ❌ (Error!)
+→ ROLLBACK (undo everything)
+→ User's balance restored, no stock added
+→ Return error to user
+```
+
+**Additional Protection - Optimistic Locking:**
+- **Problem**: Two requests at same time (race condition)
+  - Request 1: Check balance = ₹10,000 ✅
+  - Request 2: Check balance = ₹10,000 ✅
+  - Request 1: Buy stock for ₹10,000 ✅
+  - Request 2: Buy stock for ₹10,000 ✅
+  - Result: User spent ₹20,000 but only had ₹10,000! (BAD!)
+
+- **Solution**: Version numbers
+  - Each row has a version number
+  - When updating, check version hasn't changed
+  - If changed, someone else modified it → reject update"
+
+**Q: What happens if a user tries to sell more shares than they own?**
+A: "I validate the quantity before allowing the sale. Here's the exact flow:
+
+**Step 1: User Tries to Sell**
+- User wants to sell 10 shares of RELIANCE
+- Frontend sends: `POST /api/transactions/sell-stock` with quantity: 10
+
+**Step 2: Backend Checks Portfolio**
+```javascript
+const stock = await checkStockInPortfolio(user_id, stock_name);
+// Returns: [{ quantity: 5, price_per_share: 2500 }]
+```
+- Database query: "How many shares does this user own?"
+- Result: User owns 5 shares
+
+**Step 3: Validation**
+```javascript
+if (stock.length === 0) {
+  return error: "Stock not found in portfolio!";
+}
+if (stock[0].quantity < quantity) {
+  return error: "Insufficient quantity!";
+}
+```
+- Check 1: Does user own this stock? (No → Error)
+- Check 2: Does user own enough shares? (5 < 10 → Error!)
+
+**Step 4: Return Error**
+```javascript
+return {
+  code: 200,
+  message: "Insufficient quantity!",
+  data: []
+}
+```
+- **Important**: No data is modified!
+- Balance not changed
+- Portfolio not changed
+- Transaction not logged
+- User sees error message
+
+**Step 5: Frontend Shows Error**
+- Frontend receives error response
+- Shows toast: "Insufficient quantity! You only own 5 shares."
+- User can adjust quantity and try again
+
+**Why This Validation Matters:**
+- **Without validation**: User could sell shares they don't own
+- **Result**: Negative portfolio, incorrect balance, data corruption
+- **With validation**: Prevents impossible transactions, maintains data integrity
+
+**Edge Case Handling:**
+- User owns 5 shares, tries to sell 5 → ✅ Allowed (exact match)
+- User owns 5 shares, tries to sell 0 → ❌ Error (invalid quantity)
+- User owns 5 shares, tries to sell -5 → ❌ Error (negative quantity blocked by CHECK constraint)"
+
+**Q: How do you track profit/loss for investments?**
+A: "Profit/loss is calculated by comparing purchase price vs current market price. Here's how:
+
+**Step 1: Store Purchase Information**
+- When user buys stock, I store in portfolio:
+  - `quantity`: How many shares (e.g., 10)
+  - `price_per_share`: Average price paid (e.g., ₹2500)
+  - `invested_amount`: Total money spent (e.g., ₹25,000)
+
+**Step 2: Fetch Current Market Price**
+- When displaying portfolio, I call external API:
+```javascript
+const { data: { price: { NSE } } } = await axios.get(
+  `/api/stocks/detail?name=RELIANCE`
+);
+// Returns: NSE = ₹3000 (current market price)
+```
+
+**Step 3: Calculate Profit/Loss**
+```javascript
+const avgPurchasePrice = investment.price_per_share; // ₹2500
+const currentPrice = stockCurrentDetails.find(s => s.stock_name === investment.stock_name)?.current_price; // ₹3000
+const quantity = investment.quantity; // 10 shares
+
+const profitLoss = (currentPrice - avgPurchasePrice) * quantity;
+// = (₹3000 - ₹2500) × 10
+// = ₹500 × 10
+// = ₹5000 profit
+```
+
+**Step 4: Calculate Percentage**
+```javascript
+const profitLossPercent = ((currentPrice - avgPurchasePrice) / avgPurchasePrice) * 100;
+// = ((₹3000 - ₹2500) / ₹2500) × 100
+// = (₹500 / ₹2500) × 100
+// = 20% profit
+```
+
+**Step 5: Display to User**
+- Shows: "RELIANCE: 10 shares @ ₹2500 = ₹25,000 invested"
+- Shows: "Current value: ₹30,000"
+- Shows: "Profit: ₹5,000 (+20%)" in green
+- Or: "Loss: ₹2,000 (-8%)" in red if price dropped
+
+**Why Calculate On-the-Fly:**
+- Stock prices change constantly (every second)
+- Can't store current price in database (would be outdated immediately)
+- Fetch fresh price when user views portfolio
+- Calculate profit/loss in real-time
+
+**Example Scenarios:**
+- **Bought at ₹2500, now ₹3000**: ₹500 profit per share (20% gain) ✅
+- **Bought at ₹2500, now ₹2000**: ₹500 loss per share (20% loss) ❌
+- **Bought at ₹2500, now ₹2500**: ₹0 (break even) ➖"
+
+---
+
+### **Error Handling & Edge Cases**
+
+**Q: How do you handle errors in your application?**
+A: "Backend: try-catch blocks in all async functions, return appropriate HTTP status codes, consistent error response format. Frontend: catch API errors, display user-friendly messages, provide retry options, log errors for debugging. I also handle network failures and timeout scenarios."
+
+**Q: What happens if the external stock API is down?**
+A: "I catch the error in the apiService, throw a descriptive error message, which propagates to the controller, and return a 500 status with an error message. The frontend displays a user-friendly error with retry option. For production, I'd add caching and fallback data."
+
+**Q: How do you handle concurrent buy/sell requests?**
+A: "Currently, each request is processed sequentially. For production, I'd implement database-level locking or use transactions with proper isolation levels to prevent race conditions where two requests might read the same balance simultaneously."
+
+---
+
+### **Performance & Optimization**
+
+**Q: How would you optimize database queries?**
+A: "I'd add indexes on frequently queried columns (user_id, stock_name, email), use EXPLAIN to analyze query plans, implement pagination for large result sets, use SELECT specific columns instead of *, and add database connection pooling (already implemented)."
+
+**Q: How do you handle large datasets in the frontend?**
+A: "I use pagination for transaction history, lazy loading for images, skeleton loaders for perceived performance, and I'd implement virtual scrolling for very long lists. I also fetch only necessary data and cache frequently accessed information."
+
+**Q: How would you scale this application?**
+A: "Backend: horizontal scaling with load balancer, database read replicas, caching layer (Redis), CDN for static assets. Frontend: code splitting, lazy loading routes, service workers for offline support. Database: indexing, query optimization, connection pooling, read/write separation."
+
+---
+
+### **Testing & Quality Assurance**
+
+**Q: How would you test this application?**
+A: "Unit tests: Jest for backend functions, React Testing Library for components. Integration tests: API endpoint testing, database transaction testing. E2E tests: Cypress/Playwright for user flows. I'd also test edge cases: insufficient balance, invalid quantities, API failures, concurrent requests."
+
+**Q: What testing strategies would you implement?**
+A: "Test-driven development for critical business logic (buy/sell transactions), mock external APIs for consistent testing, test database with test data, automated testing in CI/CD pipeline, and manual testing for UX flows."
+
+---
+
+### **Code Quality & Best Practices**
+
+**Q: How do you ensure code quality?**
+A: "Consistent naming conventions, modular code structure, separation of concerns, error handling everywhere, comments for complex logic, environment variables for configuration, and following RESTful API conventions."
+
+**Q: How do you handle environment-specific configurations?**
+A: "I use dotenv for backend and React environment variables for frontend. Different .env files for dev, staging, production. Sensitive data (DB credentials, API keys, JWT secret) never committed to version control."
+
+---
+
+### **Specific Implementation Questions**
+
+**Q: Why do you use Math.floor() for stock prices in buy transactions?**
+A: "Stock prices from the API might have many decimal places. I floor the price to ensure consistent integer-based calculations and avoid floating-point precision issues in financial calculations. This is a simplification - in production, I'd use proper decimal handling."
+
+**Q: How does the watchlist feature work?**
+A: "Users can add stocks to watchlist with unique constraint (user_id, stock_name). When fetching watchlist, I get all user's watchlisted stocks, then use Promise.all to fetch current prices from external API in parallel, and return enriched data with current market information."
+
+**Q: Explain the balance management system.**
+A: "I track two amounts: total_balance (available cash) and invested_amount (money in stocks). When buying: total_balance decreases, invested_amount increases. When selling: reverse happens. Add/withdraw only affects total_balance. This gives users clear visibility into their financial position."
+
+**Q: How do you handle stock name variations from the API?**
+A: "I noticed the API sometimes returns stock names with 'Ltd' suffix. In the watchlist controller, I use regex to remove 'Ltd' before querying: `stock.stock_name.replace(/\s+Ltd$/i, '')`. This normalizes the name for API calls."
+
+---
+
+### **Future Improvements & Learning**
+
+**Q: What challenges did you face and how did you solve them?**
+A: "Challenge 1: Average cost basis calculation - solved with weighted average SQL formula. Challenge 2: Handling external API failures - implemented try-catch with user-friendly errors. Challenge 3: State management complexity - used Context API for global state, local state for components."
+
+**Q: What would you do differently if you rebuilt this?**
+A: "1) Use database transactions for buy/sell operations, 2) Implement proper authentication middleware, 3) Add input validation library (Joi/Yup), 4) Use TypeScript for type safety, 5) Implement WebSockets for real-time price updates, 6) Add comprehensive testing, 7) Use Redis for caching."
+
+**Q: How do you stay updated with technology?**
+A: "I follow tech blogs, participate in developer communities, build side projects, read documentation, watch conference talks, and practice on platforms like LeetCode for algorithms. I'm always learning new frameworks and best practices."
+
+---
+
+### **Behavioral & Project Management**
+
+**Q: How long did this project take?**
+A: "[Your answer] - I focused on building core features first (authentication, trading), then added enhancements (watchlist, transaction history). I prioritized security and data integrity throughout development."
+
+**Q: What was your development process?**
+A: "I started with database schema design, then built backend APIs, followed by frontend components. I tested each feature before moving to the next. I used Git for version control and followed iterative development, adding features incrementally."
+
+**Q: How would you deploy this application?**
+A: "Backend: Deploy to AWS EC2/Heroku/Railway with environment variables configured. Frontend: Build with `npm run build` and deploy to Vercel/Netlify. Database: Use managed PostgreSQL (AWS RDS/Heroku Postgres). I'd set up CI/CD pipeline for automated deployments."
+
+---
+
+## 🎯 Quick Answer Templates
+
+**For "Tell me about your project":**
+"I built a full-stack stock trading simulation app using React and Node.js. Users can browse stocks, buy/sell them, manage portfolios, and track transactions. I implemented JWT authentication, PostgreSQL database with proper schema design, and integrated external APIs for real-time market data. The app handles financial calculations like average cost basis and ensures transaction integrity."
+
+**For "What technologies did you use and why":**
+"React for component-based UI, Express for RESTful APIs, PostgreSQL for relational data with ACID compliance, JWT for stateless authentication, and Tailwind for rapid UI development. Each choice was based on project requirements and industry best practices."
+
+**For "What was the hardest part":**
+"Implementing the average cost basis calculation correctly. I had to ensure the weighted average formula worked for multiple purchases, handled edge cases, and maintained data integrity. I solved it by calculating directly in SQL using a weighted average formula."
+
