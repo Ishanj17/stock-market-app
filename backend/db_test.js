@@ -1,23 +1,28 @@
-const { Client } = require('pg');
+require('dotenv').config();
 
-const client = new Client({
-  host: '192.168.93.54', // change if needed
-  port: 5432,
-  user: 'postgres', // change
-  password: 'postgres', // change
-  database: 'crash', // change
-  connectionTimeoutMillis: 5000 // 5 seconds timeout
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: Number(process.env.DB_PORT),
 });
 
-(async () => {
+async function testConnection() {
   try {
-    await client.connect();
+    const client = await pool.connect();
     console.log("✅ Connected to PostgreSQL successfully!");
-    const res = await client.query('SELECT NOW() AS current_time');
-    console.log("Server time:", res.rows[0].current_time);
-  } catch (err) {
-    console.error("❌ Connection failed:", err.message);
-  } finally {
-    await client.end();
+    
+    const result = await client.query('SELECT NOW()');
+    console.log("🕒 Server time:", result.rows[0].now);
+    
+    client.release();
+    await pool.end();
+  } catch (error) {
+    console.error("❌ Connection failed:", error.message);
   }
-})();
+}
+
+testConnection();
